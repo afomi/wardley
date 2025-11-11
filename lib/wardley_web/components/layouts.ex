@@ -35,34 +35,25 @@ defmodule WardleyWeb.Layouts do
 
   def app(assigns) do
     ~H"""
-    <header class="navbar px-4 sm:px-6 lg:px-8">
-      <div class="flex-1">
-        <a href="/" class="flex-1 flex w-fit items-center gap-2">
-          <img src={~p"/images/logo.svg"} width="36" />
-          <span class="text-sm font-semibold">v{Application.spec(:phoenix, :vsn)}</span>
+    <header class="px-4 sm:px-6 lg:px-8 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/60 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+      <div class="mx-auto max-w-6xl h-14 flex items-center justify-between">
+        <a href="/" class="inline-flex items-center gap-2">
+          <img src={~p"/images/logo.svg"} width="28" />
+          <span class="text-xs font-medium text-slate-500">v{Application.spec(:phoenix, :vsn)}</span>
         </a>
-      </div>
-      <div class="flex-none">
-        <ul class="flex flex-column px-1 space-x-4 items-center">
-          <li>
-            <a href="https://phoenixframework.org/" class="btn btn-ghost">Website</a>
-          </li>
-          <li>
-            <a href="https://github.com/phoenixframework/phoenix" class="btn btn-ghost">GitHub</a>
-          </li>
-          <li>
-            <.theme_toggle />
-          </li>
-          <li>
-            <a href="https://hexdocs.pm/phoenix/overview.html" class="btn btn-primary">
-              Get Started <span aria-hidden="true">&rarr;</span>
-            </a>
-          </li>
-        </ul>
+        <nav class="flex items-center gap-3">
+          <a href="https://phoenixframework.org/" class="px-3 py-1.5 text-sm rounded-md text-slate-700 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800 transition">Website</a>
+          <a href="https://github.com/phoenixframework/phoenix" class="px-3 py-1.5 text-sm rounded-md text-slate-700 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800 transition">GitHub</a>
+          <a href={~p"/map"} class="px-3 py-1.5 text-sm rounded-md text-slate-700 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800 transition">Map</a>
+          <div class="ml-1"><.theme_toggle /></div>
+          <a href="https://hexdocs.pm/phoenix/overview.html" class="ml-1 inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md bg-slate-900 text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white transition">
+            Get Started <span aria-hidden="true">&rarr;</span>
+          </a>
+        </nav>
       </div>
     </header>
 
-    <main class="px-4 py-20 sm:px-6 lg:px-8">
+    <main class="px-4 py-12 sm:px-6 lg:px-8">
       <div class="mx-auto max-w-2xl space-y-4">
         {render_slot(@inner_block)}
       </div>
@@ -122,8 +113,8 @@ defmodule WardleyWeb.Layouts do
   """
   def theme_toggle(assigns) do
     ~H"""
-    <div class="card relative flex flex-row items-center border-2 border-base-300 bg-base-300 rounded-full">
-      <div class="absolute w-1/3 h-full rounded-full border-1 border-base-200 bg-base-100 brightness-200 left-0 [[data-theme=light]_&]:left-1/3 [[data-theme=dark]_&]:left-2/3 transition-[left]" />
+    <div class="relative flex flex-row items-center rounded-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900">
+      <div class="absolute w-1/3 h-full rounded-full border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 left-0 [[data-theme=light]_&]:left-1/3 [[data-theme=dark]_&]:left-2/3 transition-[left]" />
 
       <button
         class="flex p-2 cursor-pointer w-1/3"

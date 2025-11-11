@@ -1,0 +1,15 @@
+<Layouts.app flash={@flash}>
+  <div id="wardley-map" class="fixed inset-0 bg-slate-50 dark:bg-slate-950">
+    <div class="pointer-events-none absolute left-0 top-0 w-full p-3 flex justify-between text-slate-500 text-xs">
+      <div class="pointer-events-auto rounded bg-white/80 dark:bg-slate-900/60 backdrop-blur px-2 py-1 border border-slate-200 dark:border-slate-800 shadow-sm">
+        Y: Visibility (top = more visible)
+      </div>
+      <div class="pointer-events-auto rounded bg-white/80 dark:bg-slate-900/60 backdrop-blur px-2 py-1 border border-slate-200 dark:border-slate-800 shadow-sm">
+        X: Evolution (genesis → custom → product → commodity)
+      </div>
+    </div>
+    <div class="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 text-slate-400 text-xs select-none">
+      Click to add node · Drag to reposition · Edge mode: press E then click two nodes
+    </div>
+  </div>
+</Layouts.app>

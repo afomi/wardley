@@ -18,12 +18,21 @@ defmodule WardleyWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
+    get "/map", MapController, :show
   end
 
   # Other scopes may use custom stacks.
-  # scope "/api", WardleyWeb do
-  #   pipe_through :api
-  # end
+  scope "/api", WardleyWeb do
+    pipe_through :api
+
+    get "/map", MapAPIController, :map
+    post "/nodes", MapAPIController, :create_node
+    patch "/nodes/:id", MapAPIController, :update_node
+    delete "/nodes/:id", MapAPIController, :delete_node
+    post "/edges", MapAPIController, :create_edge
+    patch "/edges/:id", MapAPIController, :update_edge
+    delete "/edges/:id", MapAPIController, :delete_edge
+  end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:wardley, :dev_routes) do
