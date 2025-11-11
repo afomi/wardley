@@ -103,6 +103,9 @@ export function initMapPage() {
     selected: null
   }
 
+  let lastDeleted = null
+  let undoTimer = null
+
   const gLinks = svg.append("g").attr("stroke", "#94a3b8").attr("stroke-width", 1.5).attr("stroke-opacity", 0.7)
   const gNodes = svg.append("g")
   const gOverlay = svg.append("g").style("pointer-events", "none")
@@ -284,8 +287,12 @@ export function initMapPage() {
   const textEl = document.getElementById("node-text")
   const xEl = document.getElementById("node-x")
   const yEl = document.getElementById("node-y")
-  const metaEl = document.getElementById("node-metadata")
+  const metaFieldsEl = document.getElementById("meta-fields")
+  const metaAddBtn = document.getElementById("meta-add")
   const delBtn = document.getElementById("node-delete")
+  const undoToast = document.getElementById("undo-toast")
+  const undoBtn = document.getElementById("undo-button")
+  const undoMsg = document.getElementById("undo-message")
 
   function setSelected(node) {
     state.selected = node
@@ -306,7 +313,66 @@ export function initMapPage() {
     textEl.value = state.selected.text || ""
     xEl.value = Number(state.selected.x_pct).toFixed(1)
     yEl.value = Number(state.selected.y_pct).toFixed(1)
-    metaEl.value = JSON.stringify(state.selected.metadata || {}, null, 2)
+    // Rebuild metadata fields
+    if (metaFieldsEl) {
+      metaFieldsEl.innerHTML = ""
+      const md = state.selected.metadata || {}
+      const keys = Object.keys(md)
+      if (keys.length === 0) {
+        // start with one blank row
+        metaFieldsEl.appendChild(buildMetaRow())
+      } else {
+        for (const k of keys) {
+          metaFieldsEl.appendChild(buildMetaRow(k, toMetaString(md[k])))
+        }
+      }
+    }
+  }
+
+  function buildMetaRow(key = "", value = "") {
+    const row = document.createElement("div")
+    row.className = "meta-row grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] items-center gap-2"
+
+    const k = document.createElement("input")
+    k.type = "text"
+    k.placeholder = "key"
+    k.value = key
+    k.className = "w-full min-w-0 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 py-1 text-sm"
+
+    const v = document.createElement("input")
+    v.type = "text"
+    v.placeholder = "value"
+    v.value = value
+    v.className = "w-full min-w-0 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 py-1 text-sm"
+
+    const del = document.createElement("button")
+    del.type = "button"
+    del.textContent = "✕"
+    del.className = "rounded border border-slate-300 dark:border-slate-700 px-2 py-1 text-sm text-slate-600 dark:text-slate-300"
+    del.addEventListener("click", () => {
+      row.remove()
+    })
+
+    row.appendChild(k)
+    row.appendChild(v)
+    row.appendChild(del)
+    return row
+  }
+
+  function toMetaString(val) {
+    // represent primitives and objects as strings; keep simple UX
+    if (val == null) return ""
+    if (typeof val === "object") return JSON.stringify(val)
+    return String(val)
+  }
+
+  if (metaAddBtn && metaFieldsEl) {
+    metaAddBtn.addEventListener("click", () => {
+      const row = buildMetaRow()
+      metaFieldsEl.appendChild(row)
+      const first = row.querySelector("input")
+      if (first) first.focus()
+    })
   }
 
   if (form) {
@@ -318,12 +384,16 @@ export function initMapPage() {
         x_pct: Math.max(0, Math.min(100, parseFloat(xEl.value) || 0)),
         y_pct: Math.max(0, Math.min(100, parseFloat(yEl.value) || 0))
       }
-      try {
-        const m = metaEl.value.trim()
-        payload.metadata = m ? JSON.parse(m) : {}
-      } catch (_e) {
-        alert("Invalid JSON in metadata")
-        return
+      // Gather metadata key/value pairs
+      if (metaFieldsEl) {
+        const md = {}
+        metaFieldsEl.querySelectorAll(".meta-row").forEach(row => {
+          const [kEl, vEl] = row.querySelectorAll("input")
+          const key = (kEl?.value || "").trim()
+          const value = (vEl?.value || "").trim()
+          if (key !== "") md[key] = parseMaybeJSON(value)
+        })
+        payload.metadata = md
       }
       api("PATCH", `/api/nodes/${state.selected.id}`, payload)
         .then(updated => {
@@ -335,19 +405,96 @@ export function initMapPage() {
     })
   }
 
+  function parseMaybeJSON(str) {
+    if (str === "") return ""
+    // Try to parse JSON for objects, arrays, numbers, booleans, null
+    try {
+      const parsed = JSON.parse(str)
+      return parsed
+    } catch (_e) {
+      return str
+    }
+  }
+
+  function showUndo(message, payload) {
+    if (!undoToast) return
+    if (undoTimer) {
+      clearTimeout(undoTimer)
+      undoTimer = null
+    }
+    lastDeleted = payload
+    if (undoMsg) undoMsg.textContent = message
+    undoToast.classList.remove("hidden")
+    undoTimer = setTimeout(() => {
+      undoToast.classList.add("hidden")
+      lastDeleted = null
+      undoTimer = null
+    }, 6000)
+  }
+
+  async function undoDelete() {
+    if (!lastDeleted) return
+    const { node, edges } = lastDeleted
+    try {
+      // Recreate node
+      const recreated = await api("POST", "/api/nodes", {
+        x_pct: node.x_pct,
+        y_pct: node.y_pct,
+        text: node.text,
+        metadata: node.metadata || {}
+      })
+      // Recreate edges that referenced this node
+      const otherExists = id => state.nodes.some(n => n.id === id)
+      for (const e of edges) {
+        const source_id = e.source_id === node.id ? recreated.id : e.source_id
+        const target_id = e.target_id === node.id ? recreated.id : e.target_id
+        if (source_id === target_id) continue
+        if ((source_id === recreated.id || otherExists(source_id)) && (target_id === recreated.id || otherExists(target_id))) {
+          try {
+            const newEdge = await api("POST", "/api/edges", { source_id, target_id, metadata: e.metadata || {} })
+            state.edges.push(newEdge)
+          } catch (_e) {}
+        }
+      }
+      state.nodes.push(recreated)
+      state.selected = recreated
+      render()
+      updateDrawer()
+    } finally {
+      if (undoToast) undoToast.classList.add("hidden")
+      lastDeleted = null
+      if (undoTimer) clearTimeout(undoTimer)
+      undoTimer = null
+    }
+  }
+
+  if (undoBtn) {
+    undoBtn.addEventListener("click", e => {
+      e.preventDefault()
+      undoDelete().catch(console.error)
+    })
+  }
+
+  async function deleteSelected() {
+    if (!state.selected) return
+    const node = state.selected
+    const relatedEdges = state.edges.filter(e => e.source_id === node.id || e.target_id === node.id)
+    try {
+      await api("DELETE", `/api/nodes/${node.id}`)
+      state.nodes = state.nodes.filter(n => n.id !== node.id)
+      state.edges = state.edges.filter(e => e.source_id !== node.id && e.target_id !== node.id)
+      state.selected = null
+      render()
+      updateDrawer()
+      showUndo("Node deleted.", { node, edges: relatedEdges })
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
   if (delBtn) {
     delBtn.addEventListener("click", () => {
-      if (!state.selected) return
-      if (!confirm("Delete this node?")) return
-      api("DELETE", `/api/nodes/${state.selected.id}`)
-        .then(() => {
-          state.nodes = state.nodes.filter(n => n.id !== state.selected.id)
-          state.edges = state.edges.filter(e => e.source_id !== state.selected.id && e.target_id !== state.selected.id)
-          state.selected = null
-          render()
-          updateDrawer()
-        })
-        .catch(console.error)
+      deleteSelected()
     })
   }
 
@@ -418,6 +565,10 @@ export function initMapPage() {
       e.preventDefault()
     } else if (k === "escape") {
       setLinkMode(false)
+      e.preventDefault()
+    } else if ((k === "backspace" || k === "delete") && state.selected) {
+      // Delete selected node via keyboard
+      deleteSelected()
       e.preventDefault()
     }
   })

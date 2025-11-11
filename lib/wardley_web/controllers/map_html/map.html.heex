@@ -22,8 +22,11 @@
             </div>
           </div>
           <div>
-            <label for="node-metadata" class="block text-xs font-medium text-slate-600 dark:text-slate-300">Metadata (JSON)</label>
-            <textarea id="node-metadata" rows="6" class="mt-1 w-full rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 py-1 text-xs font-mono"></textarea>
+            <div class="flex items-center justify-between">
+              <label class="block text-xs font-medium text-slate-600 dark:text-slate-300">Metadata</label>
+              <button type="button" id="meta-add" class="inline-flex items-center rounded border border-slate-300 dark:border-slate-700 px-2 py-1 text-xs text-slate-700 dark:text-slate-200">Add field</button>
+            </div>
+            <div id="meta-fields" class="mt-2 space-y-2"></div>
           </div>
           <div class="flex justify-between items-center">
             <button type="submit" class="inline-flex items-center rounded bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-3 py-1.5 text-sm">Save</button>
@@ -45,6 +48,12 @@
     </div>
     <div class="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 text-slate-400 text-xs select-none">
       Click to add node · Drag to reposition · Line mode: press L, click two nodes
+    </div>
+    <div id="undo-toast" class="hidden pointer-events-auto absolute bottom-3 right-4 text-xs">
+      <div class="inline-flex items-center gap-2 rounded border border-slate-300 dark:border-slate-700 bg-white/90 dark:bg-slate-900/70 backdrop-blur px-3 py-2 text-slate-700 dark:text-slate-200 shadow">
+        <span id="undo-message">Node deleted.</span>
+        <button id="undo-button" class="inline-flex items-center rounded bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-2 py-1">Undo</button>
+      </div>
     </div>
   </div>
 </Layouts.app>
