@@ -25,6 +25,9 @@ import {LiveSocket} from "phoenix_live_view"
 import {hooks as colocatedHooks} from "phoenix-colocated/wardley"
 import topbar from "../vendor/topbar"
 
+// D3 for force-directed graph visuals
+import * as d3 from "d3"
+
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
@@ -81,3 +84,97 @@ if (process.env.NODE_ENV === "development") {
   })
 }
 
+// Initialize a tiny force-directed demo if a target is present
+document.addEventListener("DOMContentLoaded", () => {
+  const container = document.querySelector("#force-graph")
+  if (!container) return
+
+  const width = container.clientWidth || 600
+  const height = Math.max(container.clientHeight, 360)
+
+  // Sample minimalist graph
+  const nodes = [
+    {id: "User"},
+    {id: "UI"},
+    {id: "API"},
+    {id: "Services"},
+    {id: "Data"}
+  ]
+  const links = [
+    {source: "User", target: "UI"},
+    {source: "UI", target: "API"},
+    {source: "API", target: "Services"},
+    {source: "Services", target: "Data"}
+  ]
+
+  const svg = d3
+    .select(container)
+    .append("svg")
+    .attr("viewBox", [0, 0, width, height])
+    .classed("w-full h-full", true)
+
+  const simulation = d3
+    .forceSimulation(nodes)
+    .force("link", d3.forceLink(links).id(d => d.id).distance(90))
+    .force("charge", d3.forceManyBody().strength(-220))
+    .force("center", d3.forceCenter(width / 2, height / 2))
+
+  const link = svg
+    .append("g")
+    .attr("stroke", "#94a3b8") // slate-400
+    .attr("stroke-opacity", 0.6)
+    .selectAll("line")
+    .data(links)
+    .join("line")
+    .attr("stroke-width", 1.5)
+
+  const node = svg
+    .append("g")
+    .selectAll("g")
+    .data(nodes)
+    .join("g")
+
+  node
+    .append("circle")
+    .attr("r", 10)
+    .attr("fill", "#0f172a") // slate-950
+    .attr("stroke", "#cbd5e1") // slate-300
+    .attr("stroke-width", 1.5)
+
+  node
+    .append("text")
+    .text(d => d.id)
+    .attr("x", 14)
+    .attr("y", 4)
+    .attr("fill", "#334155") // slate-700
+    .style("font", "12px ui-sans-serif, system-ui, sans-serif")
+
+  node.call(
+    d3
+      .drag()
+      .on("start", (event, d) => {
+        if (!event.active) simulation.alphaTarget(0.3).restart()
+        d.fx = d.x
+        d.fy = d.y
+      })
+      .on("drag", (event, d) => {
+        d.fx = event.x
+        d.fy = event.y
+      })
+      .on("end", (event, d) => {
+        if (!event.active) simulation.alphaTarget(0)
+        d.fx = null
+        d.fy = null
+      })
+  )
+
+  simulation.on("tick", () => {
+    link
+      .attr("x1", d => d.source.x)
+      .attr("y1", d => d.source.y)
+      .attr("x2", d => d.target.x)
+      .attr("y2", d => d.target.y)
+
+    node.attr("transform", d => `translate(${d.x},${d.y})`)
+  })
+})
