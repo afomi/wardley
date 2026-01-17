@@ -23,6 +23,17 @@ defmodule Wardley.Maps do
 
   def get_map!(id), do: Repo.get!(Map, id)
 
+  def list_maps do
+    Repo.all(from m in Map, order_by: [desc: m.updated_at])
+  end
+
+  def get_map_with_data(id) do
+    map = Repo.get!(Map, id)
+    nodes = list_nodes(id)
+    edges = list_edges(id)
+    %{map: map, nodes: nodes, edges: edges}
+  end
+
   # Nodes
   def list_nodes(map_id) do
     Repo.all(from n in Node, where: n.map_id == ^map_id, order_by: n.inserted_at)

@@ -1,59 +1,19 @@
 <Layouts.app flash={@flash}>
-  <div id="wardley-map" class="fixed inset-0 bg-slate-50 dark:bg-slate-950">
+  <div
+    id="wardley-map"
+    class="fixed inset-0 top-14 bg-slate-50 dark:bg-slate-950"
+  >
     <div class="h-full w-full flex">
-      <div id="map-canvas" class="relative flex-1"></div>
-      <aside class="w-[320px] shrink-0 border-l border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/40 backdrop-blur p-4">
-        <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200">Node details</h3>
-        <p id="drawer-empty" class="mt-2 text-xs text-slate-500">Click a node to view and edit details.</p>
-        <form id="node-form" class="mt-3 space-y-3 hidden">
-          <input type="hidden" id="node-id" />
-          <div>
-            <label for="node-text" class="block text-xs font-medium text-slate-600 dark:text-slate-300">Label</label>
-            <input id="node-text" type="text" class="mt-1 w-full rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 py-1 text-sm" />
-          </div>
-          <div class="grid grid-cols-2 gap-2">
-            <div>
-              <label for="node-x" class="block text-xs font-medium text-slate-600 dark:text-slate-300">X (evolution %)</label>
-              <input id="node-x" type="number" min="0" max="100" step="0.1" class="mt-1 w-full rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 py-1 text-sm" />
-            </div>
-            <div>
-              <label for="node-y" class="block text-xs font-medium text-slate-600 dark:text-slate-300">Y (visibility %)</label>
-              <input id="node-y" type="number" min="0" max="100" step="0.1" class="mt-1 w-full rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 py-1 text-sm" />
-            </div>
-          </div>
-          <div>
-            <div class="flex items-center justify-between">
-              <label class="block text-xs font-medium text-slate-600 dark:text-slate-300">Metadata</label>
-              <button type="button" id="meta-add" class="inline-flex items-center rounded border border-slate-300 dark:border-slate-700 px-2 py-1 text-xs text-slate-700 dark:text-slate-200">Add field</button>
-            </div>
-            <div id="meta-fields" class="mt-2 space-y-2"></div>
-          </div>
-          <div class="flex justify-between items-center">
-            <button type="submit" class="inline-flex items-center rounded bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-3 py-1.5 text-sm">Save</button>
-            <button type="button" id="node-delete" class="inline-flex items-center rounded border border-red-300 text-red-700 dark:border-red-800 dark:text-red-300 px-3 py-1.5 text-sm">Delete</button>
-          </div>
-        </form>
-      </aside>
-    </div>
-    <div class="pointer-events-none absolute left-0 top-0 w-full p-3 flex justify-between text-slate-500 text-xs">
-      <div class="pointer-events-auto rounded bg-white/80 dark:bg-slate-900/60 backdrop-blur px-2 py-1 border border-slate-200 dark:border-slate-800 shadow-sm">
-        Y: Visibility (top = more visible)
+      <.layer_editor_panel />
+      <!-- Map Canvas (Three.js) -->
+      <div
+        id="map-canvas"
+        class="relative flex-1"
+      >
       </div>
-      <div class="pointer-events-auto rounded bg-white/80 dark:bg-slate-900/60 backdrop-blur px-2 py-1 border border-slate-200 dark:border-slate-800 shadow-sm">
-        X: Evolution (genesis → custom → product → commodity)
-      </div>
-      <div id="line-mode-badge" class="hidden pointer-events-auto rounded bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300 px-2 py-1 border border-emerald-200 dark:border-emerald-800 shadow-sm">
-        Line mode
-      </div>
+      <.node_details_panel />
     </div>
-    <div class="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 text-slate-400 text-xs select-none">
-      Click to add node · Drag to reposition · Line mode: press L, click two nodes
-    </div>
-    <div id="undo-toast" class="hidden pointer-events-auto absolute bottom-3 right-4 text-xs">
-      <div class="inline-flex items-center gap-2 rounded border border-slate-300 dark:border-slate-700 bg-white/90 dark:bg-slate-900/70 backdrop-blur px-3 py-2 text-slate-700 dark:text-slate-200 shadow">
-        <span id="undo-message">Node deleted.</span>
-        <button id="undo-button" class="inline-flex items-center rounded bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-2 py-1">Undo</button>
-      </div>
-    </div>
+    <.map_overlay />
   </div>
+  <.coaching_modal />
 </Layouts.app>

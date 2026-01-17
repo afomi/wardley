@@ -25,9 +25,10 @@ import {LiveSocket} from "phoenix_live_view"
 import {hooks as colocatedHooks} from "phoenix-colocated/wardley"
 import topbar from "../vendor/topbar"
 
-// D3 for force-directed graph visuals
-import * as d3 from "d3"
 import "./map"
+import "./search"
+import "./gameplay"
+import "./coaching"
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {

@@ -1,0 +1,111 @@
+<Layouts.app flash={@flash}>
+  <section class="max-w-4xl mx-auto px-4 py-8">
+    <nav class="mb-6">
+      <a
+        href={~p"/personas"}
+        class="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition"
+      >
+        <svg
+          class="w-4 h-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 19l-7-7 7-7"
+          />
+        </svg>
+        Back to Personas
+      </a>
+    </nav>
+
+    <header class="mb-8">
+      <div class="flex items-start gap-4">
+        <span class="flex-shrink-0 w-14 h-14 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center">
+          <svg
+            class="w-7 h-7 text-purple-600 dark:text-purple-400"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+            />
+          </svg>
+        </span>
+        <div>
+          <div class="flex items-center gap-3">
+            <h1 class="text-2xl font-semibold text-slate-900 dark:text-white">
+              <%= @persona.name %>
+            </h1>
+            <%= if @persona.is_default do %>
+              <span class="px-2.5 py-0.5 text-xs font-medium bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded">
+                Default
+              </span>
+            <% end %>
+          </div>
+          <%= if @persona.description do %>
+            <p class="mt-2 text-slate-600 dark:text-slate-400">
+              <%= @persona.description %>
+            </p>
+          <% end %>
+        </div>
+      </div>
+    </header>
+
+    <!-- Metadata Section -->
+    <%= if @persona.metadata && map_size(@persona.metadata) > 0 do %>
+      <div class="mb-8">
+        <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+          Details
+        </h2>
+        <dl class="grid gap-4 sm:grid-cols-2">
+          <%= for {key, value} <- @persona.metadata do %>
+            <div class="p-4 rounded-lg bg-slate-50 dark:bg-slate-800/50">
+              <dt class="text-sm font-medium text-slate-500 dark:text-slate-400">
+                <%= key |> to_string() |> String.replace("_", " ") |> String.capitalize() %>
+              </dt>
+              <dd class="mt-1 text-slate-900 dark:text-white">
+                <%= if is_list(value) do %>
+                  <div class="flex flex-wrap gap-1.5 mt-1">
+                    <%= for item <- value do %>
+                      <span class="inline-flex px-2 py-0.5 text-sm bg-slate-200 dark:bg-slate-700 rounded">
+                        <%= item %>
+                      </span>
+                    <% end %>
+                  </div>
+                <% else %>
+                  <%= value %>
+                <% end %>
+              </dd>
+            </div>
+          <% end %>
+        </dl>
+      </div>
+    <% end %>
+
+    <!-- Timestamps -->
+    <div class="pt-6 border-t border-slate-200 dark:border-slate-700">
+      <dl class="flex gap-8 text-sm text-slate-500">
+        <div>
+          <dt class="font-medium">Created</dt>
+          <dd class="mt-1">
+            <%= Calendar.strftime(@persona.inserted_at, "%B %d, %Y at %H:%M") %>
+          </dd>
+        </div>
+        <div>
+          <dt class="font-medium">Updated</dt>
+          <dd class="mt-1">
+            <%= Calendar.strftime(@persona.updated_at, "%B %d, %Y at %H:%M") %>
+          </dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+</Layouts.app>

@@ -15,6 +15,30 @@ defmodule WardleyWeb.MapAPIController do
     })
   end
 
+  @doc """
+  List all maps for layer selection.
+  """
+  def list_maps(conn, _params) do
+    maps = Maps.list_maps()
+    json(conn, %{
+      maps: Enum.map(maps, fn m ->
+        %{id: m.id, name: m.name, updated_at: m.updated_at}
+      end)
+    })
+  end
+
+  @doc """
+  Get a specific map with all its data (for loading as a layer).
+  """
+  def show_map(conn, %{"id" => id}) do
+    %{map: map, nodes: nodes, edges: edges} = Maps.get_map_with_data(id)
+    json(conn, %{
+      map: %{id: map.id, name: map.name},
+      nodes: Enum.map(nodes, &node_json/1),
+      edges: Enum.map(edges, &edge_json/1)
+    })
+  end
+
   def create_node(conn, params) do
     map = Maps.get_or_create_default_map()
     attrs = %{

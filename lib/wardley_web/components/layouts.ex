@@ -37,21 +37,47 @@ defmodule WardleyWeb.Layouts do
     ~H"""
     <header class="px-4 sm:px-6 lg:px-8 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/60 backdrop-blur supports-[backdrop-filter]:bg-white/60">
       <div class="mx-auto max-w-6xl h-14 flex items-center justify-between">
-        <a href="/" class="inline-flex items-center gap-2">
-          <img src={~p"/images/logo.svg"} width="28" />
-          <span class="text-xs font-medium text-slate-500">v{Application.spec(:phoenix, :vsn)}</span>
+        <a
+          href="/"
+          class="text-lg font-semibold text-slate-900 dark:text-slate-100 hover:text-slate-700 dark:hover:text-slate-300 transition"
+        >
+          Wardley.app
         </a>
-        <nav class="flex items-center gap-3">
-          <a href="https://phoenixframework.org/" class="px-3 py-1.5 text-sm rounded-md text-slate-700 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800 transition">Website</a>
-          <a href="https://github.com/phoenixframework/phoenix" class="px-3 py-1.5 text-sm rounded-md text-slate-700 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800 transition">GitHub</a>
-          <a href={~p"/map"} class="px-3 py-1.5 text-sm rounded-md text-slate-700 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800 transition">Map</a>
-          <div class="ml-1"><.theme_toggle /></div>
-          <a href="https://hexdocs.pm/phoenix/overview.html" class="ml-1 inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md bg-slate-900 text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white transition">
-            Get Started <span aria-hidden="true">&rarr;</span>
+        <nav class="flex items-center gap-1">
+          <button
+            type="button"
+            onclick="window.openSearchModal()"
+            class="p-2 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800 transition"
+            title="Search (Ctrl+K)"
+          >
+            <.icon
+              name="hero-magnifying-glass"
+              class="size-5"
+            />
+          </button>
+          <a
+            href={~p"/map"}
+            class="px-3 py-1.5 text-sm rounded-md text-slate-700 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800 transition"
+          >
+            Map
+          </a>
+          <a
+            href={~p"/gameplay"}
+            class="px-3 py-1.5 text-sm rounded-md text-slate-700 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800 transition"
+          >
+            Gameplay
+          </a>
+          <a
+            href={~p"/personas"}
+            class="px-3 py-1.5 text-sm rounded-md text-slate-700 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800 transition"
+          >
+            Personas
           </a>
         </nav>
       </div>
     </header>
+
+    <.search_modal />
 
     <main class="px-4 py-12 sm:px-6 lg:px-8">
       <div class="mx-auto max-w-2xl space-y-4">
@@ -102,6 +128,80 @@ defmodule WardleyWeb.Layouts do
         {gettext("Attempting to reconnect")}
         <.icon name="hero-arrow-path" class="ml-1 size-3 motion-safe:animate-spin" />
       </.flash>
+    </div>
+    """
+  end
+
+  @doc """
+  Renders the search modal overlay.
+
+  Opens via JavaScript (window.openSearchModal) and closes on Escape or backdrop click.
+  Provides quick search with results that link to the full search page.
+  """
+  def search_modal(assigns) do
+    ~H"""
+    <div
+      id="search-modal"
+      class="hidden fixed inset-0 z-50"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="search-modal-title"
+    >
+      <!-- Backdrop -->
+      <div
+        class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm"
+        onclick="window.closeSearchModal()"
+      >
+      </div>
+
+      <!-- Modal -->
+      <div class="fixed inset-x-4 top-8 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 sm:w-full sm:max-w-xl">
+        <div class="rounded-xl bg-white dark:bg-slate-800 shadow-2xl ring-1 ring-slate-900/10 dark:ring-slate-700">
+          <!-- Search input -->
+          <div class="flex items-center gap-3 px-4 py-3 border-b border-slate-200 dark:border-slate-700">
+            <.icon
+              name="hero-magnifying-glass"
+              class="size-5 text-slate-400"
+            />
+            <input
+              id="search-input"
+              type="text"
+              placeholder="Search nodes, maps, personas..."
+              class="flex-1 bg-transparent border-none outline-none text-slate-900 dark:text-white placeholder-slate-400 text-sm"
+              autocomplete="off"
+              oninput="window.handleSearchInput(this.value)"
+            />
+            <kbd class="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 text-xs text-slate-400 bg-slate-100 dark:bg-slate-700 rounded">
+              ESC
+            </kbd>
+          </div>
+
+          <!-- Results -->
+          <div
+            id="search-results"
+            class="max-h-80 overflow-y-auto p-2"
+          >
+            <p class="px-3 py-8 text-center text-sm text-slate-500">
+              Type to search...
+            </p>
+          </div>
+
+          <!-- Footer -->
+          <div class="flex items-center justify-between px-4 py-2 border-t border-slate-200 dark:border-slate-700 text-xs text-slate-500">
+            <span>
+              <kbd class="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 rounded">↵</kbd>
+              to select
+            </span>
+            <a
+              id="search-view-all"
+              href="/search"
+              class="text-blue-600 dark:text-blue-400 hover:underline hidden"
+            >
+              View all results →
+            </a>
+          </div>
+        </div>
+      </div>
     </div>
     """
   end
