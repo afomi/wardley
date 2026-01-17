@@ -4,11 +4,131 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="csrf-token" content={get_csrf_token()} />
+
     <.live_title default="Wardley.app" prefix="Wardley.app - ">
       {assigns[:page_title]}
     </.live_title>
-    <link phx-track-static rel="stylesheet" href={~p"/assets/css/app.css"} />
-    <script defer phx-track-static type="text/javascript" src={~p"/assets/js/app.js"}>
+
+    <!-- Primary Meta Tags -->
+    <meta
+      name="description"
+      content={assigns[:page_description] || "Create and visualize Wardley Maps for strategic planning. Map your value chain, understand component evolution, and make better business decisions."}
+    />
+    <meta
+      name="keywords"
+      content="wardley mapping, wardley maps, strategy, value chain, business strategy, strategic planning, component evolution, situational awareness"
+    />
+    <meta name="author" content="Wardley.app" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Canonical URL -->
+    <link
+      rel="canonical"
+      href={assigns[:canonical_url] || "https://wardley.app#{assigns[:current_path] || "/"}"}
+    />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content={assigns[:og_type] || "website"} />
+    <meta property="og:site_name" content="Wardley.app" />
+    <meta
+      property="og:title"
+      content={if assigns[:page_title], do: "Wardley.app - #{assigns[:page_title]}", else: "Wardley.app - Strategic Mapping Tool"}
+    />
+    <meta
+      property="og:description"
+      content={assigns[:page_description] || "Create and visualize Wardley Maps for strategic planning. Map your value chain, understand component evolution, and make better business decisions."}
+    />
+    <meta
+      property="og:url"
+      content={assigns[:canonical_url] || "https://wardley.app#{assigns[:current_path] || "/"}"}
+    />
+    <meta
+      property="og:image"
+      content={assigns[:og_image] || "https://wardley.app/images/og-image.png"}
+    />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content={if assigns[:page_title], do: "Wardley.app - #{assigns[:page_title]}", else: "Wardley.app - Strategic Mapping Tool"}
+    />
+    <meta
+      name="twitter:description"
+      content={assigns[:page_description] || "Create and visualize Wardley Maps for strategic planning. Map your value chain, understand component evolution, and make better business decisions."}
+    />
+    <meta
+      name="twitter:image"
+      content={assigns[:og_image] || "https://wardley.app/images/og-image.png"}
+    />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href={~p"/favicon.ico"} />
+    <link rel="icon" type="image/png" sizes="32x32" href={~p"/images/favicon-32x32.png"} />
+    <link rel="icon" type="image/png" sizes="16x16" href={~p"/images/favicon-16x16.png"} />
+    <link rel="apple-touch-icon" sizes="180x180" href={~p"/images/apple-touch-icon.png"} />
+
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+
+    <!-- Schema.org JSON-LD -->
+    <script type="application/ld+json">
+      <%= raw Jason.encode!(%{
+        "@context" => "https://schema.org",
+        "@type" => "WebApplication",
+        "name" => "Wardley.app",
+        "description" => "Create and visualize Wardley Maps for strategic planning. Map your value chain, understand component evolution, and make better business decisions.",
+        "url" => "https://wardley.app",
+        "applicationCategory" => "BusinessApplication",
+        "operatingSystem" => "Web Browser",
+        "offers" => %{
+          "@type" => "Offer",
+          "price" => "0",
+          "priceCurrency" => "USD"
+        },
+        "author" => %{
+          "@type" => "Organization",
+          "name" => "Wardley.app",
+          "url" => "https://wardley.app"
+        },
+        "keywords" => "wardley mapping, strategy, value chain, business planning",
+        "screenshot" => "https://wardley.app/images/og-image.png"
+      }) %>
+    </script>
+
+    <!-- Breadcrumb Schema (if breadcrumbs provided) -->
+    <%= if assigns[:breadcrumbs] do %>
+      <script type="application/ld+json">
+        <%= raw Jason.encode!(%{
+          "@context" => "https://schema.org",
+          "@type" => "BreadcrumbList",
+          "itemListElement" => Enum.with_index(assigns[:breadcrumbs], 1) |> Enum.map(fn {{name, url}, position} ->
+            %{
+              "@type" => "ListItem",
+              "position" => position,
+              "name" => name,
+              "item" => "https://wardley.app#{url}"
+            }
+          end)
+        }) %>
+      </script>
+    <% end %>
+
+    <link
+      phx-track-static
+      rel="stylesheet"
+      href={~p"/assets/css/app.css"}
+    />
+    <script
+      defer
+      phx-track-static
+      type="text/javascript"
+      src={~p"/assets/js/app.js"}
+    >
     </script>
     <script>
       (() => {

@@ -15,11 +15,15 @@ defmodule WardleyWeb.SearchPageController do
 
     categories = Search.list_categories()
 
-    render(conn, :index,
+    page_title = if(query != "", do: "Search: #{query}", else: "Search")
+
+    conn
+    |> assign(:page_title, page_title)
+    |> assign(:page_description, "Search across all Wardley Map components, maps, and personas. Find nodes by category, tags, or text.")
+    |> render(:index,
       query: query,
       results: results,
-      categories: categories,
-      page_title: if(query != "", do: "Search: #{query}", else: "Search")
+      categories: categories
     )
   end
 end
