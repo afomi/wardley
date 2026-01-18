@@ -40,62 +40,71 @@ const SEGMENTS = {
     description: "Execute the decision. Take action and observe the results to begin the loop again."
   },
 
-  // Middle ring - Strategy elements
-  climate: {
-    ring: "middle",
-    label: "Climate",
-    startAngle: Math.PI * 1.25,
-    endAngle: Math.PI * 1.75,
-    color: 0xcbd5e1,
-    activeColor: 0x22c55e,
-    description: "External forces and patterns of change. What climatic patterns affect evolution? Competition, regulation, technology shifts."
-  },
-  doctrine: {
-    ring: "middle",
-    label: "Doctrine",
-    startAngle: Math.PI * 0.75,
-    endAngle: Math.PI * 1.25,
-    color: 0xcbd5e1,
-    activeColor: 0x22c55e,
-    description: "Universal principles of good practice. Focus on user needs, use appropriate methods, think small, be transparent."
-  },
-  leadership: {
-    ring: "middle",
-    label: "Leadership",
-    startAngle: Math.PI * 0.25,
-    endAngle: Math.PI * 0.75,
-    color: 0xcbd5e1,
-    activeColor: 0x22c55e,
-    description: "Context-specific gameplay. What moves can we make? Attack, defend, position, accelerate, decelerate."
-  },
+  // Middle ring - Strategy elements (5 segments, each 72° = 2π/5)
   landscape: {
     ring: "middle",
     label: "Landscape",
-    startAngle: Math.PI * 1.75,
-    endAngle: Math.PI * 2.25,
+    startAngle: Math.PI * 1.5,
+    endAngle: Math.PI * 1.9,
     color: 0xcbd5e1,
     activeColor: 0x22c55e,
     description: "The map itself - understanding position, movement, and the value chain. Where are we? Where are others?"
   },
-
-  // Inner ring - Purpose
-  purpose: {
-    ring: "inner",
+  purpose_middle: {
+    ring: "middle",
     label: "Purpose",
+    startAngle: Math.PI * 1.9,
+    endAngle: Math.PI * 2.3,
+    color: 0xcbd5e1,
+    activeColor: 0x22c55e,
+    description: "The moral imperative and reason for being. Why do we exist? What do we serve? The foundation of all strategy."
+  },
+  leadership: {
+    ring: "middle",
+    label: "Leadership",
+    startAngle: Math.PI * 0.3,
+    endAngle: Math.PI * 0.7,
+    color: 0xcbd5e1,
+    activeColor: 0x22c55e,
+    description: "Context-specific gameplay. What moves can we make? Attack, defend, position, accelerate, decelerate."
+  },
+  doctrine: {
+    ring: "middle",
+    label: "Doctrine",
+    startAngle: Math.PI * 0.7,
+    endAngle: Math.PI * 1.1,
+    color: 0xcbd5e1,
+    activeColor: 0x22c55e,
+    description: "Universal principles of good practice. Focus on user needs, use appropriate methods, think small, be transparent."
+  },
+  climate: {
+    ring: "middle",
+    label: "Climate",
+    startAngle: Math.PI * 1.1,
+    endAngle: Math.PI * 1.5,
+    color: 0xcbd5e1,
+    activeColor: 0x22c55e,
+    description: "External forces and patterns of change. What climatic patterns affect evolution? Competition, regulation, technology shifts."
+  },
+
+  // Inner ring - Why
+  why_purpose: {
+    ring: "inner",
+    label: "Why of Purpose",
     startAngle: 0,
     endAngle: Math.PI,
     color: 0xf1f5f9,
     activeColor: 0xfbbf24,
-    description: "Why of purpose - the moral imperative. What is our reason for being? What do we serve?"
+    description: "The moral imperative. What is our reason for being? What do we serve? The core that guides all decisions."
   },
-  movement: {
+  why_movement: {
     ring: "inner",
-    label: "Movement",
+    label: "Why of Movement",
     startAngle: Math.PI,
     endAngle: Math.PI * 2,
     color: 0xf1f5f9,
     activeColor: 0xfbbf24,
-    description: "Why of movement - the direction of travel. Where are we going? What change do we seek?"
+    description: "The direction of travel. Where are we going? What change do we seek? The vision that pulls us forward."
   }
 }
 
@@ -247,9 +256,6 @@ export function initGameplay() {
     return sprite
   }
 
-  // Add "The game" label at center
-  const gameLabel = createTextSprite("The \"game\"", 20, "#334155", 0)
-  scene.add(gameLabel)
 
   // Add segment labels
   for (const [key, segment] of Object.entries(SEGMENTS)) {
