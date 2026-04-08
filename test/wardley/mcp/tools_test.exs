@@ -130,6 +130,35 @@ defmodule Wardley.MCP.ToolsTest do
     end
   end
 
+  describe "list_maps" do
+    test "returns all maps" do
+      {:ok, json} = Tools.handle("list_maps", %{})
+      result = Jason.decode!(json)
+
+      assert is_list(result["maps"])
+      assert length(result["maps"]) >= 1
+
+      map_entry = hd(result["maps"])
+      assert map_entry["id"]
+      assert map_entry["name"]
+    end
+  end
+
+  describe "get_map_svg" do
+    test "returns SVG markup for default map", %{map: map} do
+      {:ok, n1} = Maps.create_node(%{map_id: map.id, text: "User", x_pct: 50.0, y_pct: 10.0})
+      {:ok, n2} = Maps.create_node(%{map_id: map.id, text: "API", x_pct: 50.0, y_pct: 40.0})
+      {:ok, _e} = Maps.create_edge(%{map_id: map.id, source_id: n1.id, target_id: n2.id})
+
+      {:ok, svg} = Tools.handle("get_map_svg", %{})
+
+      assert svg =~ "<svg"
+      assert svg =~ "User"
+      assert svg =~ "API"
+      assert svg =~ "<line"
+    end
+  end
+
   describe "unknown tool" do
     test "returns error for unknown tool name" do
       {:error, msg} = Tools.handle("nonexistent", %{})

@@ -42,6 +42,15 @@ defmodule WardleyWeb.MapAPIController do
     })
   end
 
+  def map_svg(conn, %{"id" => id}) do
+    %{map: map, nodes: nodes, edges: edges} = Maps.get_map_with_data(id)
+    svg = Wardley.Maps.Svg.render(map, nodes, edges)
+
+    conn
+    |> put_resp_content_type("image/svg+xml")
+    |> send_resp(200, svg)
+  end
+
   def create_node(conn, params) do
     map = Maps.get_or_create_default_map()
 

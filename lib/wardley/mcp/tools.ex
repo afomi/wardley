@@ -26,6 +26,14 @@ defmodule Wardley.MCP.Tools do
   def definitions do
     [
       %{
+        name: "list_maps",
+        description: "List all Wardley maps. Returns each map's ID, name, and last updated time.",
+        inputSchema: %{
+          type: "object",
+          properties: %{}
+        }
+      },
+      %{
         name: "get_map",
         description:
           "Get the current Wardley map with all its nodes (components) and edges (dependencies). " <>
@@ -130,8 +138,35 @@ defmodule Wardley.MCP.Tools do
           },
           required: ["edge_id"]
         }
+      },
+      %{
+        name: "get_map_svg",
+        description:
+          "Get a Wardley map rendered as an SVG image. " <>
+            "Returns the SVG markup showing components positioned on the evolution/value chain axes with dependency edges.",
+        inputSchema: %{
+          type: "object",
+          properties: %{
+            map_id: %{
+              type: "integer",
+              description: "Optional map ID. Omit to use the default map."
+            }
+          }
+        }
       }
     ]
+  end
+
+  def handle("list_maps", _args) do
+    maps = Maps.list_maps()
+
+    {:ok,
+     Jason.encode!(%{
+       maps:
+         Enum.map(maps, fn m ->
+           %{id: m.id, name: m.name, updated_at: m.updated_at}
+         end)
+     })}
   end
 
   def handle("get_map", args) do
@@ -220,6 +255,20 @@ defmodule Wardley.MCP.Tools do
       {:ok, _} -> {:ok, Jason.encode!(%{deleted: true, edge_id: id})}
       {:error, changeset} -> {:error, format_errors(changeset)}
     end
+  end
+
+  def handle("get_map_svg", args) do
+    map =
+      case args do
+        %{"map_id" => id} when not is_nil(id) -> Maps.get_map!(id)
+        _ -> Maps.get_or_create_default_map()
+      end
+
+    nodes = Maps.list_nodes(map.id)
+    edges = Maps.list_edges(map.id)
+
+    svg = Wardley.Maps.Svg.render(map, nodes, edges)
+    {:ok, svg}
   end
 
   def handle(name, _args) do

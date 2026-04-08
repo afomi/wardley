@@ -38,6 +38,7 @@ defmodule WardleyWeb.Router do
     get "/map", MapAPIController, :map
     get "/maps", MapAPIController, :list_maps
     get "/maps/:id", MapAPIController, :show_map
+    get "/maps/:id/svg", MapAPIController, :map_svg
     post "/nodes", MapAPIController, :create_node
     patch "/nodes/:id", MapAPIController, :update_node
     delete "/nodes/:id", MapAPIController, :delete_node
