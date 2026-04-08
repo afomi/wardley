@@ -153,6 +153,23 @@ defmodule Wardley.MCP.Tools do
             }
           }
         }
+      },
+      %{
+        name: "get_map_dsl",
+        description:
+          "Get a Wardley map in OWM DSL text format. " <>
+            "Returns a compact, human-readable representation compatible with onlinewardleymaps.com. " <>
+            "Coordinates are [visibility, evolution] from 0.0 to 1.0. " <>
+            "Best format for LLM consumption — fewer tokens than JSON or SVG.",
+        inputSchema: %{
+          type: "object",
+          properties: %{
+            map_id: %{
+              type: "integer",
+              description: "Optional map ID. Omit to use the default map."
+            }
+          }
+        }
       }
     ]
   end
@@ -269,6 +286,20 @@ defmodule Wardley.MCP.Tools do
 
     svg = Wardley.Maps.Svg.render(map, nodes, edges)
     {:ok, svg}
+  end
+
+  def handle("get_map_dsl", args) do
+    map =
+      case args do
+        %{"map_id" => id} when not is_nil(id) -> Maps.get_map!(id)
+        _ -> Maps.get_or_create_default_map()
+      end
+
+    nodes = Maps.list_nodes(map.id)
+    edges = Maps.list_edges(map.id)
+
+    dsl = Wardley.Maps.Dsl.render(map, nodes, edges)
+    {:ok, dsl}
   end
 
   def handle(name, _args) do
