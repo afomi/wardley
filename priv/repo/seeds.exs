@@ -34,62 +34,71 @@ Repo.delete_all(Persona)
 _user = Personas.get_or_create_default_persona()
 
 # Public-facing personas
-{:ok, _citizen} = Personas.create_persona(%{
-  name: "Citizen",
-  description: "Residents who use city services directly",
-  metadata: %{"category" => "external", "access_level" => "public"}
-})
+{:ok, _citizen} =
+  Personas.create_persona(%{
+    name: "Citizen",
+    description: "Residents who use city services directly",
+    metadata: %{"category" => "external", "access_level" => "public"}
+  })
 
-{:ok, _business_owner} = Personas.create_persona(%{
-  name: "Business Owner",
-  description: "Local business operators who need permits, licenses, and compliance",
-  metadata: %{"category" => "external", "access_level" => "public"}
-})
+{:ok, _business_owner} =
+  Personas.create_persona(%{
+    name: "Business Owner",
+    description: "Local business operators who need permits, licenses, and compliance",
+    metadata: %{"category" => "external", "access_level" => "public"}
+  })
 
 # Internal staff personas
-{:ok, _frontline_staff} = Personas.create_persona(%{
-  name: "Frontline Staff",
-  description: "Employees who interact directly with citizens at service counters",
-  metadata: %{"category" => "internal", "access_level" => "staff"}
-})
+{:ok, _frontline_staff} =
+  Personas.create_persona(%{
+    name: "Frontline Staff",
+    description: "Employees who interact directly with citizens at service counters",
+    metadata: %{"category" => "internal", "access_level" => "staff"}
+  })
 
-{:ok, _caseworker} = Personas.create_persona(%{
-  name: "Caseworker",
-  description: "Staff who manage ongoing citizen cases and applications",
-  metadata: %{"category" => "internal", "access_level" => "staff"}
-})
+{:ok, _caseworker} =
+  Personas.create_persona(%{
+    name: "Caseworker",
+    description: "Staff who manage ongoing citizen cases and applications",
+    metadata: %{"category" => "internal", "access_level" => "staff"}
+  })
 
-{:ok, _department_manager} = Personas.create_persona(%{
-  name: "Department Manager",
-  description: "Managers overseeing departmental operations and staff",
-  metadata: %{"category" => "internal", "access_level" => "management"}
-})
+{:ok, _department_manager} =
+  Personas.create_persona(%{
+    name: "Department Manager",
+    description: "Managers overseeing departmental operations and staff",
+    metadata: %{"category" => "internal", "access_level" => "management"}
+  })
 
 # Executive/Governance personas
-{:ok, _executive} = Personas.create_persona(%{
-  name: "Executive",
-  description: "City leadership (City Manager, Directors) making strategic decisions",
-  metadata: %{"category" => "internal", "access_level" => "executive"}
-})
+{:ok, _executive} =
+  Personas.create_persona(%{
+    name: "Executive",
+    description: "City leadership (City Manager, Directors) making strategic decisions",
+    metadata: %{"category" => "internal", "access_level" => "executive"}
+  })
 
-{:ok, _elected_official} = Personas.create_persona(%{
-  name: "Elected Official",
-  description: "Mayor, Council members with policy and budget authority",
-  metadata: %{"category" => "governance", "access_level" => "elected"}
-})
+{:ok, _elected_official} =
+  Personas.create_persona(%{
+    name: "Elected Official",
+    description: "Mayor, Council members with policy and budget authority",
+    metadata: %{"category" => "governance", "access_level" => "elected"}
+  })
 
 # Technical personas
-{:ok, _it_staff} = Personas.create_persona(%{
-  name: "IT Staff",
-  description: "Technical staff maintaining systems and infrastructure",
-  metadata: %{"category" => "internal", "access_level" => "technical"}
-})
+{:ok, _it_staff} =
+  Personas.create_persona(%{
+    name: "IT Staff",
+    description: "Technical staff maintaining systems and infrastructure",
+    metadata: %{"category" => "internal", "access_level" => "technical"}
+  })
 
-{:ok, _analyst} = Personas.create_persona(%{
-  name: "Analyst",
-  description: "Staff who analyze data, create reports, and inform decisions",
-  metadata: %{"category" => "internal", "access_level" => "staff"}
-})
+{:ok, _analyst} =
+  Personas.create_persona(%{
+    name: "Analyst",
+    description: "Staff who analyze data, create reports, and inform decisions",
+    metadata: %{"category" => "internal", "access_level" => "staff"}
+  })
 
 IO.puts("Seeded: #{Repo.aggregate(Persona, :count)} personas")
 
@@ -120,146 +129,167 @@ end
 # User-Facing Services (High Visibility: 80-100%)
 # -----------------------------------------------------------------------------
 
-citizen = create_node.("Citizen", 90.0, 98.0, %{
-  "type" => "user",
-  "description" => "Primary user of city services"
-})
+citizen =
+  create_node.("Citizen", 90.0, 98.0, %{
+    "type" => "user",
+    "description" => "Primary user of city services"
+  })
 
-online_portal = create_node.("Online Portal", 65.0, 90.0, %{
-  "type" => "service",
-  "category" => "Web Application",
-  "description" => "Main website for citizen service access"
-})
+online_portal =
+  create_node.("Online Portal", 65.0, 90.0, %{
+    "type" => "service",
+    "category" => "Web Application",
+    "description" => "Main website for citizen service access"
+  })
 
-mobile_app = create_node.("Mobile App", 55.0, 88.0, %{
-  "type" => "service",
-  "category" => "Mobile Application",
-  "description" => "iOS/Android app for service access"
-})
+mobile_app =
+  create_node.("Mobile App", 55.0, 88.0, %{
+    "type" => "service",
+    "category" => "Mobile Application",
+    "description" => "iOS/Android app for service access"
+  })
 
-in_person = create_node.("In-Person Service", 85.0, 85.0, %{
-  "type" => "service",
-  "description" => "Walk-in service centers"
-})
+in_person =
+  create_node.("In-Person Service", 85.0, 85.0, %{
+    "type" => "service",
+    "description" => "Walk-in service centers"
+  })
 
 # -----------------------------------------------------------------------------
 # Core Services (Visibility: 60-80%)
 # -----------------------------------------------------------------------------
 
-permit_system = create_node.("Permit Application", 45.0, 75.0, %{
-  "type" => "service",
-  "category" => "Business Process",
-  "description" => "Building permits, business licenses, etc."
-})
+permit_system =
+  create_node.("Permit Application", 45.0, 75.0, %{
+    "type" => "service",
+    "category" => "Business Process",
+    "description" => "Building permits, business licenses, etc."
+  })
 
-payment_processing = create_node.("Payment Processing", 80.0, 70.0, %{
-  "type" => "service",
-  "category" => "Financial",
-  "description" => "Accept payments for fees, taxes, fines"
-})
+payment_processing =
+  create_node.("Payment Processing", 80.0, 70.0, %{
+    "type" => "service",
+    "category" => "Financial",
+    "description" => "Accept payments for fees, taxes, fines"
+  })
 
-case_management = create_node.("Case Management", 40.0, 68.0, %{
-  "type" => "service",
-  "category" => "Business Process",
-  "description" => "Track citizen requests and complaints"
-})
+case_management =
+  create_node.("Case Management", 40.0, 68.0, %{
+    "type" => "service",
+    "category" => "Business Process",
+    "description" => "Track citizen requests and complaints"
+  })
 
-notification_service = create_node.("Notifications", 70.0, 65.0, %{
-  "type" => "service",
-  "category" => "Communication",
-  "description" => "Email, SMS alerts to citizens"
-})
+notification_service =
+  create_node.("Notifications", 70.0, 65.0, %{
+    "type" => "service",
+    "category" => "Communication",
+    "description" => "Email, SMS alerts to citizens"
+  })
 
 # -----------------------------------------------------------------------------
 # Business Logic Layer (Visibility: 40-60%)
 # -----------------------------------------------------------------------------
 
-eligibility_engine = create_node.("Eligibility Engine", 25.0, 55.0, %{
-  "type" => "component",
-  "category" => "Business Rules",
-  "description" => "Determines benefit/permit eligibility",
-  "automation_potential" => "high"
-})
+eligibility_engine =
+  create_node.("Eligibility Engine", 25.0, 55.0, %{
+    "type" => "component",
+    "category" => "Business Rules",
+    "description" => "Determines benefit/permit eligibility",
+    "automation_potential" => "high"
+  })
 
-workflow_engine = create_node.("Workflow Engine", 50.0, 50.0, %{
-  "type" => "component",
-  "category" => "Business Rules",
-  "description" => "Routes work through approval chains"
-})
+workflow_engine =
+  create_node.("Workflow Engine", 50.0, 50.0, %{
+    "type" => "component",
+    "category" => "Business Rules",
+    "description" => "Routes work through approval chains"
+  })
 
-document_management = create_node.("Document Management", 55.0, 48.0, %{
-  "type" => "component",
-  "category" => "Content Management",
-  "tags" => ["CMS"]
-})
+document_management =
+  create_node.("Document Management", 55.0, 48.0, %{
+    "type" => "component",
+    "category" => "Content Management",
+    "tags" => ["CMS"]
+  })
 
-reporting = create_node.("Reporting & Analytics", 60.0, 45.0, %{
-  "type" => "component",
-  "category" => "Analytics",
-  "description" => "Dashboards, KPIs, compliance reports"
-})
+reporting =
+  create_node.("Reporting & Analytics", 60.0, 45.0, %{
+    "type" => "component",
+    "category" => "Analytics",
+    "description" => "Dashboards, KPIs, compliance reports"
+  })
 
 # -----------------------------------------------------------------------------
 # Integration Layer (Visibility: 25-40%)
 # -----------------------------------------------------------------------------
 
-api_gateway = create_node.("API Gateway", 70.0, 38.0, %{
-  "type" => "infrastructure",
-  "category" => "Integration"
-})
+api_gateway =
+  create_node.("API Gateway", 70.0, 38.0, %{
+    "type" => "infrastructure",
+    "category" => "Integration"
+  })
 
-identity_provider = create_node.("Identity & Auth", 75.0, 35.0, %{
-  "type" => "infrastructure",
-  "category" => "Security",
-  "tags" => ["IAM", "SSO"]
-})
+identity_provider =
+  create_node.("Identity & Auth", 75.0, 35.0, %{
+    "type" => "infrastructure",
+    "category" => "Security",
+    "tags" => ["IAM", "SSO"]
+  })
 
-state_integration = create_node.("State Systems Integration", 30.0, 32.0, %{
-  "type" => "integration",
-  "description" => "Connect to state DMV, health, etc."
-})
+state_integration =
+  create_node.("State Systems Integration", 30.0, 32.0, %{
+    "type" => "integration",
+    "description" => "Connect to state DMV, health, etc."
+  })
 
 # -----------------------------------------------------------------------------
 # Data Layer (Visibility: 15-25%)
 # -----------------------------------------------------------------------------
 
-citizen_database = create_node.("Citizen Database", 65.0, 22.0, %{
-  "type" => "data",
-  "category" => "Database",
-  "tags" => ["PostgreSQL", "PII"]
-})
+citizen_database =
+  create_node.("Citizen Database", 65.0, 22.0, %{
+    "type" => "data",
+    "category" => "Database",
+    "tags" => ["PostgreSQL", "PII"]
+  })
 
-gis_system = create_node.("GIS / Mapping", 50.0, 20.0, %{
-  "type" => "data",
-  "category" => "Geospatial"
-})
+gis_system =
+  create_node.("GIS / Mapping", 50.0, 20.0, %{
+    "type" => "data",
+    "category" => "Geospatial"
+  })
 
-legacy_mainframe = create_node.("Legacy Mainframe", 15.0, 18.0, %{
-  "type" => "data",
-  "category" => "Legacy System",
-  "description" => "COBOL-based property records",
-  "technical_debt" => "high"
-})
+legacy_mainframe =
+  create_node.("Legacy Mainframe", 15.0, 18.0, %{
+    "type" => "data",
+    "category" => "Legacy System",
+    "description" => "COBOL-based property records",
+    "technical_debt" => "high"
+  })
 
 # -----------------------------------------------------------------------------
 # Infrastructure (Visibility: 0-15%)
 # -----------------------------------------------------------------------------
 
-cloud_platform = create_node.("Cloud Platform", 85.0, 12.0, %{
-  "type" => "infrastructure",
-  "category" => "Cloud Platform",
-  "tags" => ["AWS", "IaaS"]
-})
+cloud_platform =
+  create_node.("Cloud Platform", 85.0, 12.0, %{
+    "type" => "infrastructure",
+    "category" => "Cloud Platform",
+    "tags" => ["AWS", "IaaS"]
+  })
 
-network = create_node.("Network Infrastructure", 92.0, 8.0, %{
-  "type" => "infrastructure",
-  "category" => "Network"
-})
+network =
+  create_node.("Network Infrastructure", 92.0, 8.0, %{
+    "type" => "infrastructure",
+    "category" => "Network"
+  })
 
-power = create_node.("Power / Facilities", 95.0, 5.0, %{
-  "type" => "infrastructure",
-  "category" => "Utility"
-})
+power =
+  create_node.("Power / Facilities", 95.0, 5.0, %{
+    "type" => "infrastructure",
+    "category" => "Utility"
+  })
 
 # -----------------------------------------------------------------------------
 # Edges: Value Chain Dependencies
@@ -358,126 +388,143 @@ end
 # User-Facing (High Visibility: 80-100%)
 # -----------------------------------------------------------------------------
 
-resident = create_node2.("Resident", 90.0, 98.0, %{
-  "type" => "user",
-  "description" => "Park visitors and program participants"
-})
+resident =
+  create_node2.("Resident", 90.0, 98.0, %{
+    "type" => "user",
+    "description" => "Park visitors and program participants"
+  })
 
-parks_website = create_node2.("Parks Website", 70.0, 90.0, %{
-  "type" => "service",
-  "category" => "Web Application",
-  "description" => "Information about parks, programs, reservations"
-})
+parks_website =
+  create_node2.("Parks Website", 70.0, 90.0, %{
+    "type" => "service",
+    "category" => "Web Application",
+    "description" => "Information about parks, programs, reservations"
+  })
 
-reservation_system = create_node2.("Facility Reservation", 50.0, 85.0, %{
-  "type" => "service",
-  "category" => "Business Process",
-  "description" => "Book picnic shelters, sports fields, event spaces"
-})
+reservation_system =
+  create_node2.("Facility Reservation", 50.0, 85.0, %{
+    "type" => "service",
+    "category" => "Business Process",
+    "description" => "Book picnic shelters, sports fields, event spaces"
+  })
 
-program_registration = create_node2.("Program Registration", 55.0, 82.0, %{
-  "type" => "service",
-  "category" => "Business Process",
-  "description" => "Sign up for classes, camps, leagues"
-})
+program_registration =
+  create_node2.("Program Registration", 55.0, 82.0, %{
+    "type" => "service",
+    "category" => "Business Process",
+    "description" => "Sign up for classes, camps, leagues"
+  })
 
 # -----------------------------------------------------------------------------
 # Core Services (Visibility: 60-80%)
 # -----------------------------------------------------------------------------
 
-payment_parks = create_node2.("Payment Processing", 82.0, 70.0, %{
-  "type" => "service",
-  "category" => "Financial",
-  "description" => "Fees for reservations, programs, permits"
-})
+payment_parks =
+  create_node2.("Payment Processing", 82.0, 70.0, %{
+    "type" => "service",
+    "category" => "Financial",
+    "description" => "Fees for reservations, programs, permits"
+  })
 
-scheduling_engine = create_node2.("Scheduling Engine", 40.0, 65.0, %{
-  "type" => "component",
-  "category" => "Business Rules",
-  "description" => "Manages availability, conflicts, waitlists"
-})
+scheduling_engine =
+  create_node2.("Scheduling Engine", 40.0, 65.0, %{
+    "type" => "component",
+    "category" => "Business Rules",
+    "description" => "Manages availability, conflicts, waitlists"
+  })
 
-notifications_parks = create_node2.("Notifications", 72.0, 62.0, %{
-  "type" => "service",
-  "category" => "Communication",
-  "description" => "Reminders, cancellations, weather alerts"
-})
+notifications_parks =
+  create_node2.("Notifications", 72.0, 62.0, %{
+    "type" => "service",
+    "category" => "Communication",
+    "description" => "Reminders, cancellations, weather alerts"
+  })
 
 # -----------------------------------------------------------------------------
 # Business Logic Layer (Visibility: 40-60%)
 # -----------------------------------------------------------------------------
 
-cms_parks = create_node2.("Content Management", 45.0, 50.0, %{
-  "type" => "component",
-  "category" => "Content Management",
-  "tags" => ["CMS", "WordPress"],
-  "description" => "WordPress-based (differs from main portal)"
-})
+cms_parks =
+  create_node2.("Content Management", 45.0, 50.0, %{
+    "type" => "component",
+    "category" => "Content Management",
+    "tags" => ["CMS", "WordPress"],
+    "description" => "WordPress-based (differs from main portal)"
+  })
 
-inventory_system = create_node2.("Equipment Inventory", 35.0, 48.0, %{
-  "type" => "component",
-  "category" => "Asset Management",
-  "description" => "Track rental equipment, maintenance schedules"
-})
+inventory_system =
+  create_node2.("Equipment Inventory", 35.0, 48.0, %{
+    "type" => "component",
+    "category" => "Asset Management",
+    "description" => "Track rental equipment, maintenance schedules"
+  })
 
-reporting_parks = create_node2.("Reporting & Analytics", 55.0, 45.0, %{
-  "type" => "component",
-  "category" => "Analytics",
-  "description" => "Usage stats, revenue, program outcomes"
-})
+reporting_parks =
+  create_node2.("Reporting & Analytics", 55.0, 45.0, %{
+    "type" => "component",
+    "category" => "Analytics",
+    "description" => "Usage stats, revenue, program outcomes"
+  })
 
 # -----------------------------------------------------------------------------
 # Integration Layer (Visibility: 25-40%)
 # -----------------------------------------------------------------------------
 
-api_gateway_parks = create_node2.("API Gateway", 68.0, 38.0, %{
-  "type" => "infrastructure",
-  "category" => "Integration"
-})
+api_gateway_parks =
+  create_node2.("API Gateway", 68.0, 38.0, %{
+    "type" => "infrastructure",
+    "category" => "Integration"
+  })
 
-identity_parks = create_node2.("Identity & Auth", 78.0, 35.0, %{
-  "type" => "infrastructure",
-  "category" => "Security",
-  "tags" => ["IAM", "SSO"],
-  "description" => "Shared with city SSO"
-})
+identity_parks =
+  create_node2.("Identity & Auth", 78.0, 35.0, %{
+    "type" => "infrastructure",
+    "category" => "Security",
+    "tags" => ["IAM", "SSO"],
+    "description" => "Shared with city SSO"
+  })
 
 # -----------------------------------------------------------------------------
 # Data Layer (Visibility: 15-25%)
 # -----------------------------------------------------------------------------
 
-parks_database = create_node2.("Parks Database", 62.0, 22.0, %{
-  "type" => "data",
-  "category" => "Database",
-  "tags" => ["MySQL"]
-})
+parks_database =
+  create_node2.("Parks Database", 62.0, 22.0, %{
+    "type" => "data",
+    "category" => "Database",
+    "tags" => ["MySQL"]
+  })
 
-gis_parks = create_node2.("GIS / Mapping", 52.0, 20.0, %{
-  "type" => "data",
-  "category" => "Geospatial",
-  "description" => "Park boundaries, trail maps, facility locations"
-})
+gis_parks =
+  create_node2.("GIS / Mapping", 52.0, 20.0, %{
+    "type" => "data",
+    "category" => "Geospatial",
+    "description" => "Park boundaries, trail maps, facility locations"
+  })
 
 # -----------------------------------------------------------------------------
 # Infrastructure (Visibility: 0-15%)
 # -----------------------------------------------------------------------------
 
-cloud_parks = create_node2.("Cloud Platform", 80.0, 12.0, %{
-  "type" => "infrastructure",
-  "category" => "Cloud Platform",
-  "tags" => ["Azure", "IaaS"],
-  "description" => "Different cloud than main IT (Azure vs AWS)"
-})
+cloud_parks =
+  create_node2.("Cloud Platform", 80.0, 12.0, %{
+    "type" => "infrastructure",
+    "category" => "Cloud Platform",
+    "tags" => ["Azure", "IaaS"],
+    "description" => "Different cloud than main IT (Azure vs AWS)"
+  })
 
-network_parks = create_node2.("Network Infrastructure", 92.0, 8.0, %{
-  "type" => "infrastructure",
-  "category" => "Network"
-})
+network_parks =
+  create_node2.("Network Infrastructure", 92.0, 8.0, %{
+    "type" => "infrastructure",
+    "category" => "Network"
+  })
 
-power_parks = create_node2.("Power / Facilities", 95.0, 5.0, %{
-  "type" => "infrastructure",
-  "category" => "Utility"
-})
+power_parks =
+  create_node2.("Power / Facilities", 95.0, 5.0, %{
+    "type" => "infrastructure",
+    "category" => "Utility"
+  })
 
 # -----------------------------------------------------------------------------
 # Edges: Value Chain Dependencies

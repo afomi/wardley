@@ -270,6 +270,100 @@ defmodule Wardley.SearchTest do
     end
   end
 
+  describe "suggest_components/2" do
+    setup do
+      map1 = Maps.get_or_create_default_map()
+      {:ok, map2} = Wardley.Repo.insert(%Wardley.Maps.Map{name: "Second Map"})
+
+      {:ok, _} =
+        Maps.create_node(%{
+          map_id: map1.id,
+          text: "Cloud Platform",
+          x_pct: 85.0,
+          y_pct: 12.0
+        })
+
+      {:ok, _} =
+        Maps.create_node(%{
+          map_id: map2.id,
+          text: "Cloud Platform",
+          x_pct: 80.0,
+          y_pct: 15.0
+        })
+
+      {:ok, _} =
+        Maps.create_node(%{
+          map_id: map1.id,
+          text: "Cloud Storage",
+          x_pct: 75.0,
+          y_pct: 20.0
+        })
+
+      {:ok, _} =
+        Maps.create_node(%{
+          map_id: map1.id,
+          text: "Payment Processing",
+          x_pct: 60.0,
+          y_pct: 50.0
+        })
+
+      {:ok, _} =
+        Maps.create_node(%{
+          map_id: map1.id,
+          text: "Node",
+          x_pct: 50.0,
+          y_pct: 50.0
+        })
+
+      :ok
+    end
+
+    test "returns distinct component names matching query" do
+      results = Search.suggest_components("cloud")
+
+      texts = Enum.map(results, & &1.text)
+      assert "Cloud Platform" in texts
+      assert "Cloud Storage" in texts
+      refute "Payment Processing" in texts
+    end
+
+    test "returns usage count across maps" do
+      results = Search.suggest_components("cloud platform")
+
+      platform = Enum.find(results, &(&1.text == "Cloud Platform"))
+      assert platform.usage_count == 2
+      assert platform.map_count == 2
+    end
+
+    test "excludes default 'Node' text" do
+      results = Search.suggest_components("node")
+
+      texts = Enum.map(results, & &1.text)
+      refute "Node" in texts
+    end
+
+    test "is case-insensitive" do
+      results = Search.suggest_components("CLOUD")
+
+      assert length(results) == 2
+    end
+
+    test "prefix matches appear first" do
+      results = Search.suggest_components("cloud")
+
+      # Both start with "Cloud" so should be sorted by usage then alpha
+      assert length(results) == 2
+      first = hd(results)
+      assert String.starts_with?(first.text, "Cloud")
+    end
+
+    test "respects limit" do
+      results = Search.suggest_components("cloud", 1)
+
+      assert length(results) == 1
+    end
+  end
+
   describe "aggregate_by_category/1" do
     setup do
       map1 = Maps.get_or_create_default_map()

@@ -85,7 +85,9 @@ defmodule Wardley.PersonasTest do
     test "update_persona/2 with valid data updates the persona" do
       {:ok, persona} = Personas.create_persona(%{name: "Original"})
 
-      assert {:ok, updated} = Personas.update_persona(persona, %{name: "Updated", description: "New desc"})
+      assert {:ok, updated} =
+               Personas.update_persona(persona, %{name: "Updated", description: "New desc"})
+
       assert updated.name == "Updated"
       assert updated.description == "New desc"
     end
@@ -116,7 +118,9 @@ defmodule Wardley.PersonasTest do
     end
 
     test "search_personas/1 finds personas by description" do
-      {:ok, _} = Personas.create_persona(%{name: "Analyst", description: "Works on data analysis"})
+      {:ok, _} =
+        Personas.create_persona(%{name: "Analyst", description: "Works on data analysis"})
+
       {:ok, _} = Personas.create_persona(%{name: "Manager", description: "Oversees operations"})
 
       results = Personas.search_personas("data")

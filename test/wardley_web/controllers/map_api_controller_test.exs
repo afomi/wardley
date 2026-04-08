@@ -83,7 +83,8 @@ defmodule WardleyWeb.MapAPIControllerTest do
     end
 
     test "updates node text", %{conn: conn, map: map} do
-      {:ok, node} = Maps.create_node(%{map_id: map.id, text: "Original", x_pct: 50.0, y_pct: 50.0})
+      {:ok, node} =
+        Maps.create_node(%{map_id: map.id, text: "Original", x_pct: 50.0, y_pct: 50.0})
 
       conn = patch(conn, ~p"/api/nodes/#{node.id}", %{"text" => "Renamed"})
       response = json_response(conn, 200)
@@ -112,7 +113,8 @@ defmodule WardleyWeb.MapAPIControllerTest do
 
   describe "DELETE /api/nodes/:id" do
     test "deletes the node", %{conn: conn, map: map} do
-      {:ok, node} = Maps.create_node(%{map_id: map.id, text: "Deletable", x_pct: 50.0, y_pct: 50.0})
+      {:ok, node} =
+        Maps.create_node(%{map_id: map.id, text: "Deletable", x_pct: 50.0, y_pct: 50.0})
 
       conn = delete(conn, ~p"/api/nodes/#{node.id}")
 
@@ -134,8 +136,11 @@ defmodule WardleyWeb.MapAPIControllerTest do
 
   describe "POST /api/edges" do
     test "creates an edge between nodes", %{conn: conn, map: map} do
-      {:ok, source} = Maps.create_node(%{map_id: map.id, text: "Source", x_pct: 20.0, y_pct: 80.0})
-      {:ok, target} = Maps.create_node(%{map_id: map.id, text: "Target", x_pct: 60.0, y_pct: 40.0})
+      {:ok, source} =
+        Maps.create_node(%{map_id: map.id, text: "Source", x_pct: 20.0, y_pct: 80.0})
+
+      {:ok, target} =
+        Maps.create_node(%{map_id: map.id, text: "Target", x_pct: 60.0, y_pct: 40.0})
 
       params = %{
         "source_id" => source.id,
@@ -152,7 +157,8 @@ defmodule WardleyWeb.MapAPIControllerTest do
     end
 
     test "returns error without source_id", %{conn: conn, map: map} do
-      {:ok, target} = Maps.create_node(%{map_id: map.id, text: "Target", x_pct: 60.0, y_pct: 40.0})
+      {:ok, target} =
+        Maps.create_node(%{map_id: map.id, text: "Target", x_pct: 60.0, y_pct: 40.0})
 
       params = %{"target_id" => target.id}
 
@@ -165,9 +171,14 @@ defmodule WardleyWeb.MapAPIControllerTest do
 
   describe "PATCH /api/edges/:id" do
     test "updates edge metadata", %{conn: conn, map: map} do
-      {:ok, source} = Maps.create_node(%{map_id: map.id, text: "Source", x_pct: 20.0, y_pct: 80.0})
-      {:ok, target} = Maps.create_node(%{map_id: map.id, text: "Target", x_pct: 60.0, y_pct: 40.0})
-      {:ok, edge} = Maps.create_edge(%{map_id: map.id, source_id: source.id, target_id: target.id})
+      {:ok, source} =
+        Maps.create_node(%{map_id: map.id, text: "Source", x_pct: 20.0, y_pct: 80.0})
+
+      {:ok, target} =
+        Maps.create_node(%{map_id: map.id, text: "Target", x_pct: 60.0, y_pct: 40.0})
+
+      {:ok, edge} =
+        Maps.create_edge(%{map_id: map.id, source_id: source.id, target_id: target.id})
 
       conn = patch(conn, ~p"/api/edges/#{edge.id}", %{"metadata" => %{"relationship" => "uses"}})
       response = json_response(conn, 200)
@@ -178,9 +189,14 @@ defmodule WardleyWeb.MapAPIControllerTest do
 
   describe "DELETE /api/edges/:id" do
     test "deletes the edge", %{conn: conn, map: map} do
-      {:ok, source} = Maps.create_node(%{map_id: map.id, text: "Source", x_pct: 20.0, y_pct: 80.0})
-      {:ok, target} = Maps.create_node(%{map_id: map.id, text: "Target", x_pct: 60.0, y_pct: 40.0})
-      {:ok, edge} = Maps.create_edge(%{map_id: map.id, source_id: source.id, target_id: target.id})
+      {:ok, source} =
+        Maps.create_node(%{map_id: map.id, text: "Source", x_pct: 20.0, y_pct: 80.0})
+
+      {:ok, target} =
+        Maps.create_node(%{map_id: map.id, text: "Target", x_pct: 60.0, y_pct: 40.0})
+
+      {:ok, edge} =
+        Maps.create_edge(%{map_id: map.id, source_id: source.id, target_id: target.id})
 
       conn = delete(conn, ~p"/api/edges/#{edge.id}")
 

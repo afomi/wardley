@@ -31,4 +31,3 @@ defmodule Wardley.Repo.Migrations.CreateMapsNodesEdges do
     create index(:edges, [:target_id])
   end
 end
-

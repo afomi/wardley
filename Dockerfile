@@ -73,7 +73,7 @@ RUN mix release
 FROM ${RUNNER_IMAGE} AS final
 
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends libstdc++6 openssl libncurses5 locales ca-certificates \
+  && apt-get install -y --no-install-recommends libstdc++6 openssl libncurses5 locales ca-certificates curl \
   && rm -rf /var/lib/apt/lists/*
 
 # Set the locale
@@ -92,6 +92,11 @@ ENV MIX_ENV="prod"
 
 # Only copy the final release from the build stage
 COPY --from=builder --chown=nobody:root /app/_build/${MIX_ENV}/rel/wardley ./
+
+# Fetch AWS RDS CA bundle for TLS database connections
+RUN curl -fsSL -o /etc/ssl/aws-rds-ca.pem \
+     https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem
+ENV RDS_CA_CERT_PATH="/etc/ssl/aws-rds-ca.pem"
 
 USER nobody
 

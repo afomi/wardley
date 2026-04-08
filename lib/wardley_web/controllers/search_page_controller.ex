@@ -19,7 +19,10 @@ defmodule WardleyWeb.SearchPageController do
 
     conn
     |> assign(:page_title, page_title)
-    |> assign(:page_description, "Search across all Wardley Map components, maps, and personas. Find nodes by category, tags, or text.")
+    |> assign(
+      :page_description,
+      "Search across all Wardley Map components, maps, and personas. Find nodes by category, tags, or text."
+    )
     |> render(:index,
       query: query,
       results: results,

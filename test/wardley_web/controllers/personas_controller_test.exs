@@ -18,7 +18,8 @@ defmodule WardleyWeb.PersonasControllerTest do
 
   describe "GET /api/personas/:id" do
     test "returns a specific persona", %{conn: conn} do
-      {:ok, persona} = Personas.create_persona(%{name: "Test Persona", description: "For testing"})
+      {:ok, persona} =
+        Personas.create_persona(%{name: "Test Persona", description: "For testing"})
 
       conn = get(conn, ~p"/api/personas/#{persona.id}")
       response = json_response(conn, 200)

@@ -153,8 +153,8 @@ defmodule WardleyWeb.Layouts do
         onclick="window.closeSearchModal()"
       >
       </div>
-
-      <!-- Modal -->
+      
+    <!-- Modal -->
       <div class="fixed inset-x-4 top-8 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 sm:w-full sm:max-w-xl">
         <div class="rounded-xl bg-white dark:bg-slate-800 shadow-2xl ring-1 ring-slate-900/10 dark:ring-slate-700">
           <!-- Search input -->
@@ -175,8 +175,8 @@ defmodule WardleyWeb.Layouts do
               ESC
             </kbd>
           </div>
-
-          <!-- Results -->
+          
+    <!-- Results -->
           <div
             id="search-results"
             class="max-h-80 overflow-y-auto p-2"
@@ -185,12 +185,11 @@ defmodule WardleyWeb.Layouts do
               Type to search...
             </p>
           </div>
-
-          <!-- Footer -->
+          
+    <!-- Footer -->
           <div class="flex items-center justify-between px-4 py-2 border-t border-slate-200 dark:border-slate-700 text-xs text-slate-500">
             <span>
-              <kbd class="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 rounded">↵</kbd>
-              to select
+              <kbd class="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 rounded">↵</kbd> to select
             </span>
             <a
               id="search-view-all"

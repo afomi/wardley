@@ -204,7 +204,8 @@ defmodule WardleyWeb.MapComponents do
                   </h3>
                   <div class="prose dark:prose-invert max-w-none">
                     <p class="text-slate-600 dark:text-slate-300">
-                      Every map starts with a <strong>user</strong> - the person or entity whose needs you're trying to serve. This anchors your map and gives it purpose.
+                      Every map starts with a <strong>user</strong>
+                      - the person or entity whose needs you're trying to serve. This anchors your map and gives it purpose.
                     </p>
                     <div class="mt-4 p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg border border-emerald-200 dark:border-emerald-800">
                       <h4 class="font-medium text-emerald-800 dark:text-emerald-300 mb-2">
@@ -255,16 +256,13 @@ defmodule WardleyWeb.MapComponents do
                       </h4>
                       <ul class="text-sm text-emerald-700 dark:text-emerald-400 space-y-1">
                         <li>
-                          <strong>Outcome-focused</strong>
-                          - "fast checkout" not "payment system"
+                          <strong>Outcome-focused</strong> - "fast checkout" not "payment system"
                         </li>
                         <li>
-                          <strong>Visible to the user</strong>
-                          - things they can perceive
+                          <strong>Visible to the user</strong> - things they can perceive
                         </li>
                         <li>
-                          <strong>Valuable</strong>
-                          - something they'd pay for or care about
+                          <strong>Valuable</strong> - something they'd pay for or care about
                         </li>
                       </ul>
                     </div>
@@ -426,7 +424,10 @@ defmodule WardleyWeb.MapComponents do
                     </div>
                     <div class="flex-1">
                       <p class="text-sm text-slate-600 dark:text-slate-300">
-                        Welcome! I'm here to help you create your Wardley Map. Let's start by identifying who you're creating this map for. <strong>Who is the primary user of the system or service you want to map?</strong>
+                        Welcome! I'm here to help you create your Wardley Map. Let's start by identifying who you're creating this map for.
+                        <strong>
+                          Who is the primary user of the system or service you want to map?
+                        </strong>
                       </p>
                     </div>
                   </div>
@@ -592,7 +593,7 @@ defmodule WardleyWeb.MapComponents do
               id="code-editor"
               class="w-full p-3 font-mono text-sm bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 border-none outline-none resize-none"
               style="min-height: 200px; height: auto;"
-              placeholder={"title My Map\n\nanchor User [0.95, 0.50]\ncomponent Need [0.80, 0.50]\nUser->Need"}
+              placeholder="title My Map\n\nanchor User [0.95, 0.50]\ncomponent Need [0.80, 0.50]\nUser->Need"
               spellcheck="false"
             ></textarea>
             <div
@@ -603,8 +604,7 @@ defmodule WardleyWeb.MapComponents do
           </div>
         </div>
         <!-- Overlay layers will be inserted here by JS -->
-        <div id="overlay-layers-container">
-        </div>
+        <div id="overlay-layers-container"></div>
         <!-- Add layer button -->
         <div class="p-3 border-t border-slate-200 dark:border-slate-800">
           <button
@@ -794,7 +794,8 @@ defmodule WardleyWeb.MapComponents do
                 class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
               />
               <p class="mt-1 text-xs text-slate-500">
-                Requires <code class="bg-slate-100 dark:bg-slate-800 px-1 rounded">repo</code> scope.
+                Requires <code class="bg-slate-100 dark:bg-slate-800 px-1 rounded">repo</code>
+                scope.
                 <a
                   href="https://github.com/settings/tokens/new?scopes=repo&description=Wardley.app"
                   target="_blank"
@@ -1015,7 +1016,7 @@ defmodule WardleyWeb.MapComponents do
         <textarea
           id="code-editor"
           class="w-full h-full p-3 font-mono text-sm bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 border-none outline-none resize-none"
-          placeholder={"title My Map\n\nanchor User [0.95, 0.50]\ncomponent Need [0.80, 0.50]\nUser->Need"}
+          placeholder="title My Map\n\nanchor User [0.95, 0.50]\ncomponent Need [0.80, 0.50]\nUser->Need"
           spellcheck="false"
         ></textarea>
       </div>
@@ -1184,10 +1185,62 @@ defmodule WardleyWeb.MapComponents do
         >
           Line mode
         </div>
+        <div
+          id="multi-select-badge"
+          class="hidden pointer-events-auto rounded bg-violet-100 text-violet-700 dark:bg-violet-900/50 dark:text-violet-300 px-2 py-1 border border-violet-200 dark:border-violet-800 shadow-sm flex items-center gap-2"
+        >
+          <span>0 selected</span>
+          <button
+            type="button"
+            onclick="saveFragment()"
+            class="rounded bg-violet-600 text-white px-2 py-0.5 text-xs hover:bg-violet-700"
+          >
+            Save Fragment
+          </button>
+        </div>
+        <button
+          type="button"
+          onclick="toggleFragmentsPanel()"
+          class="pointer-events-auto flex items-center gap-1.5 rounded bg-white/80 dark:bg-slate-900/60 backdrop-blur text-slate-600 dark:text-slate-300 px-3 py-1 border border-slate-200 dark:border-slate-800 shadow-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+        >
+          <svg
+            class="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2z"
+            />
+          </svg>
+          Fragments
+        </button>
+      </div>
+    </div>
+    <div
+      id="fragments-panel"
+      class="hidden pointer-events-auto absolute top-12 right-[290px] w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-lg z-20"
+    >
+      <div class="px-3 py-2 border-b border-slate-200 dark:border-slate-800 text-sm font-medium text-slate-700 dark:text-slate-200">
+        Saved Fragments
+      </div>
+      <div
+        id="fragments-list"
+        class="max-h-64 overflow-y-auto p-1"
+      >
+        <div class="text-xs text-slate-400 px-2 py-1">
+          Loading...
+        </div>
+      </div>
+      <div class="px-3 py-2 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-400">
+        Cmd/Ctrl+click to multi-select, then Save Fragment
       </div>
     </div>
     <div class="pointer-events-none absolute bottom-3 left-[400px] right-[280px] flex justify-center text-slate-400 text-xs select-none">
-      Click to add node · Drag to reposition · Line mode: press L, click two nodes
+      Click to add node · Drag to reposition · Line mode: press L · Cmd/Ctrl+click to multi-select
     </div>
     <div
       id="undo-toast"

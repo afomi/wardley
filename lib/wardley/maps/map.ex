@@ -15,4 +15,3 @@ defmodule Wardley.Maps.Map do
     |> validate_length(:name, max: 200)
   end
 end
-

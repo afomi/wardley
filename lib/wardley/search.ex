@@ -251,6 +251,39 @@ defmodule Wardley.Search do
     }
   end
 
+  @doc """
+  Suggest component names for type-ahead.
+
+  Returns distinct node texts matching the query, ordered by:
+  1. Prefix matches first (starts with query)
+  2. Then substring matches
+  3. Alphabetically within each group
+
+  Each result includes a usage count (how many maps use this component name).
+  """
+  def suggest_components(query, limit \\ 10) when is_binary(query) do
+    search_term = "%#{query}%"
+    prefix_term = "#{query}%"
+
+    Repo.all(
+      from n in Node,
+        where: ilike(n.text, ^search_term),
+        where: n.text != "Node",
+        group_by: [n.text],
+        select: %{
+          text: n.text,
+          usage_count: count(n.id),
+          map_count: count(n.map_id, :distinct)
+        },
+        order_by: [
+          desc: fragment("? ILIKE ?", n.text, ^prefix_term),
+          desc: count(n.id),
+          asc: n.text
+        ],
+        limit: ^limit
+    )
+  end
+
   defp calculate_evolution_stats(nodes) when nodes == [], do: nil
 
   defp calculate_evolution_stats(nodes) do

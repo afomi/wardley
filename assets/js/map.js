@@ -75,7 +75,8 @@ export function initMapPage() {
   const interactionState = {
     linkMode: false,
     linkSource: null,
-    selected: null
+    selected: null,
+    multiSelected: new Set() // node IDs for multi-select (Cmd/Ctrl+click)
   }
 
   let lastDeleted = null
@@ -279,6 +280,8 @@ export function initMapPage() {
     const ring = mesh.userData.ring
     if (state.selected && state.selected.id === node.id) {
       ring.material.color.setHex(0x0ea5e9) // sky-500
+    } else if (interactionState.multiSelected.has(node.id)) {
+      ring.material.color.setHex(0x8b5cf6) // violet-500
     } else {
       ring.material.color.setHex(0xcbd5e1) // slate-300
     }
@@ -682,16 +685,94 @@ export function initMapPage() {
     })
   }
 
-  // Node label editing
+  // Node label editing with type-ahead
   let activeEditInput = null
   let activeEditNode = null
+  let activeDropdown = null
+  let activeSuggestions = []
+  let selectedSuggestionIndex = -1
+  let suggestDebounceTimer = null
 
   function closeEditInput() {
     if (activeEditInput && activeEditInput.parentNode) {
       activeEditInput.parentNode.removeChild(activeEditInput)
     }
+    closeDropdown()
     activeEditInput = null
     activeEditNode = null
+  }
+
+  function closeDropdown() {
+    if (activeDropdown && activeDropdown.parentNode) {
+      activeDropdown.parentNode.removeChild(activeDropdown)
+    }
+    activeDropdown = null
+    activeSuggestions = []
+    selectedSuggestionIndex = -1
+  }
+
+  function fetchSuggestions(query) {
+    if (suggestDebounceTimer) clearTimeout(suggestDebounceTimer)
+    if (!query || query.length < 1 || query === "Node") {
+      closeDropdown()
+      return
+    }
+    suggestDebounceTimer = setTimeout(async () => {
+      try {
+        const data = await api("GET", `/api/suggestions?q=${encodeURIComponent(query)}&limit=8`)
+        if (!activeEditInput) return
+        activeSuggestions = data.suggestions || []
+        selectedSuggestionIndex = -1
+        renderDropdown()
+      } catch (e) {
+        console.error("Suggestions fetch failed:", e)
+      }
+    }, 80)
+  }
+
+  function renderDropdown() {
+    closeDropdown()
+    if (activeSuggestions.length === 0 || !activeEditInput) return
+
+    const dropdown = document.createElement("div")
+    dropdown.className = "absolute z-20 mt-1 w-64 bg-white border border-slate-200 rounded shadow-lg overflow-hidden"
+    dropdown.style.left = activeEditInput.style.left
+    dropdown.style.top = `${parseInt(activeEditInput.style.top) + activeEditInput.offsetHeight + 4}px`
+
+    activeSuggestions.forEach((s, i) => {
+      const item = document.createElement("div")
+      item.className = "px-3 py-1.5 text-sm cursor-pointer flex justify-between items-center hover:bg-slate-100"
+      if (i === selectedSuggestionIndex) {
+        item.classList.add("bg-slate-100")
+      }
+
+      const name = document.createElement("span")
+      name.textContent = s.text
+      name.className = "text-slate-900"
+
+      const count = document.createElement("span")
+      const label = s.map_count === 1 ? "map" : "maps"
+      count.textContent = `${s.map_count} ${label}`
+      count.className = "text-slate-400 text-xs"
+
+      item.appendChild(name)
+      item.appendChild(count)
+
+      item.addEventListener("mousedown", e => {
+        e.preventDefault()
+        selectSuggestion(s)
+      })
+      dropdown.appendChild(item)
+    })
+
+    activeDropdown = dropdown
+    canvasWrap.appendChild(dropdown)
+  }
+
+  function selectSuggestion(suggestion) {
+    if (!activeEditInput || !activeEditNode) return
+    activeEditInput.value = suggestion.text
+    closeDropdown()
   }
 
   function startNodeLabelEdit(node) {
@@ -753,7 +834,32 @@ export function initMapPage() {
       render()
     }
 
+    input.addEventListener("input", () => {
+      fetchSuggestions(input.value.trim())
+    })
+
     input.addEventListener("keydown", e => {
+      if (activeDropdown && activeSuggestions.length > 0) {
+        if (e.key === "ArrowDown") {
+          e.preventDefault()
+          selectedSuggestionIndex = Math.min(selectedSuggestionIndex + 1, activeSuggestions.length - 1)
+          renderDropdown()
+          return
+        } else if (e.key === "ArrowUp") {
+          e.preventDefault()
+          selectedSuggestionIndex = Math.max(selectedSuggestionIndex - 1, -1)
+          renderDropdown()
+          return
+        } else if (e.key === "Tab" && selectedSuggestionIndex >= 0) {
+          e.preventDefault()
+          selectSuggestion(activeSuggestions[selectedSuggestionIndex])
+          return
+        } else if (e.key === "Enter" && selectedSuggestionIndex >= 0) {
+          e.preventDefault()
+          selectSuggestion(activeSuggestions[selectedSuggestionIndex])
+          return
+        }
+      }
       if (e.key === "Enter") {
         e.preventDefault()
         save()
@@ -762,7 +868,10 @@ export function initMapPage() {
         cancel()
       }
     })
-    input.addEventListener("blur", save)
+    input.addEventListener("blur", e => {
+      if (activeDropdown && activeDropdown.contains(e.relatedTarget)) return
+      save()
+    })
 
     canvasWrap.appendChild(input)
     input.focus()
@@ -799,9 +908,20 @@ export function initMapPage() {
           state.linkSource = node
           showPreviewLine(node)
         }
+      } else if (event.metaKey || event.ctrlKey) {
+        // Cmd/Ctrl+click toggles multi-select
+        if (interactionState.multiSelected.has(node.id)) {
+          interactionState.multiSelected.delete(node.id)
+        } else {
+          interactionState.multiSelected.add(node.id)
+        }
+        updateFragmentActions()
+        render()
       } else {
         draggedNode = node
         isDraggingNode = true
+        interactionState.multiSelected.clear()
+        updateFragmentActions()
         setSelected(node)
       }
     }
@@ -876,6 +996,14 @@ export function initMapPage() {
 
     const node = findNodeAtPosition(event)
     if (!node && !state.linkMode) {
+      // Clear multi-select when clicking empty space
+      if (interactionState.multiSelected.size > 0) {
+        interactionState.multiSelected.clear()
+        updateFragmentActions()
+        render()
+        return
+      }
+
       // Click on empty space - create new node
       const { x, y } = getWorldPosition(event)
       const { x_pct, y_pct } = percentFromWorld(x, y)
@@ -908,6 +1036,141 @@ export function initMapPage() {
   renderer.domElement.addEventListener("contextmenu", event => {
     event.preventDefault()
   })
+
+  // Fragment management
+  function updateFragmentActions() {
+    const badge = document.getElementById("multi-select-badge")
+    if (!badge) return
+    if (interactionState.multiSelected.size > 0) {
+      badge.classList.remove("hidden")
+      badge.querySelector("span").textContent = `${interactionState.multiSelected.size} selected`
+    } else {
+      badge.classList.add("hidden")
+    }
+  }
+
+  function saveFragment() {
+    const ids = Array.from(interactionState.multiSelected)
+    if (ids.length === 0) return
+
+    const name = prompt("Fragment name:")
+    if (!name) return
+
+    const mapId = state.mapId
+    api("POST", "/api/fragments", {
+      name,
+      node_ids: ids,
+      map_id: mapId
+    })
+      .then(fragment => {
+        interactionState.multiSelected.clear()
+        updateFragmentActions()
+        render()
+        loadFragmentsList()
+      })
+      .catch(console.error)
+  }
+
+  function loadFragmentsList() {
+    const panel = document.getElementById("fragments-list")
+    if (!panel) return
+
+    api("GET", "/api/fragments")
+      .then(data => {
+        const fragments = data.fragments || []
+        panel.innerHTML = ""
+
+        if (fragments.length === 0) {
+          panel.innerHTML = '<div class="text-xs text-slate-400 px-2 py-1">No fragments yet</div>'
+          return
+        }
+
+        fragments.forEach(f => {
+          const nodeCount = (f.data?.nodes || []).length
+          const edgeCount = (f.data?.edges || []).length
+
+          const item = document.createElement("div")
+          item.className = "flex items-center justify-between gap-2 px-2 py-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
+
+          const info = document.createElement("div")
+          info.className = "flex-1 min-w-0"
+
+          const nameEl = document.createElement("div")
+          nameEl.className = "text-sm text-slate-700 dark:text-slate-200 truncate"
+          nameEl.textContent = f.name
+
+          const meta = document.createElement("div")
+          meta.className = "text-xs text-slate-400"
+          meta.textContent = `${nodeCount} nodes · ${edgeCount} edges`
+
+          info.appendChild(nameEl)
+          info.appendChild(meta)
+
+          const actions = document.createElement("div")
+          actions.className = "flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+
+          const invokeBtn = document.createElement("button")
+          invokeBtn.className = "text-xs px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-300"
+          invokeBtn.textContent = "Add"
+          invokeBtn.addEventListener("click", e => {
+            e.stopPropagation()
+            invokeFragment(f.id)
+          })
+
+          const deleteBtn = document.createElement("button")
+          deleteBtn.className = "text-xs px-2 py-0.5 rounded bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200"
+          deleteBtn.textContent = "Del"
+          deleteBtn.addEventListener("click", e => {
+            e.stopPropagation()
+            api("DELETE", `/api/fragments/${f.id}`)
+              .then(() => loadFragmentsList())
+              .catch(console.error)
+          })
+
+          actions.appendChild(invokeBtn)
+          actions.appendChild(deleteBtn)
+
+          item.appendChild(info)
+          item.appendChild(actions)
+          panel.appendChild(item)
+        })
+      })
+      .catch(console.error)
+  }
+
+  function invokeFragment(fragmentId) {
+    const mapId = state.mapId
+    // Place fragment at center of current view
+    api("POST", `/api/fragments/${fragmentId}/invoke`, {
+      map_id: mapId,
+      x_pct: 30.0,
+      y_pct: 30.0
+    })
+      .then(data => {
+        (data.nodes || []).forEach(n => state.nodes.push(n))
+        ;(data.edges || []).forEach(e => state.edges.push(e))
+        render()
+        syncCodeFromVisual()
+      })
+      .catch(console.error)
+  }
+
+  // Toggle fragments panel visibility
+  function toggleFragmentsPanel() {
+    const panel = document.getElementById("fragments-panel")
+    if (!panel) return
+    panel.classList.toggle("hidden")
+    if (!panel.classList.contains("hidden")) {
+      loadFragmentsList()
+    }
+  }
+
+  // Expose to window for button onclick
+  window.toggleFragmentsPanel = toggleFragmentsPanel
+  window.saveFragment = saveFragment
+
+  // Load fragments on init
+  setTimeout(() => loadFragmentsList(), 500)
 
   // Keyboard shortcuts
   function isTypingTarget(e) {

@@ -7,9 +7,11 @@ defmodule WardleyWeb.MapController do
 
     conn
     |> assign(:page_title, "Map Editor")
-    |> assign(:page_description, "Interactive Wardley Map editor. Add components, define dependencies, and visualize your value chain evolution from genesis to commodity.")
+    |> assign(
+      :page_description,
+      "Interactive Wardley Map editor. Add components, define dependencies, and visualize your value chain evolution from genesis to commodity."
+    )
     |> assign(:og_type, "article")
     |> render(:map, map: map)
   end
 end
-

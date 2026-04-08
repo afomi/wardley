@@ -45,7 +45,15 @@ defmodule WardleyWeb.Router do
     patch "/edges/:id", MapAPIController, :update_edge
     delete "/edges/:id", MapAPIController, :delete_edge
 
+    # Fragments
+    get "/fragments", MapAPIController, :list_fragments
+    get "/fragments/:id", MapAPIController, :show_fragment
+    post "/fragments", MapAPIController, :create_fragment
+    delete "/fragments/:id", MapAPIController, :delete_fragment
+    post "/fragments/:id/invoke", MapAPIController, :invoke_fragment
+
     # Search
+    get "/suggestions", SearchController, :suggestions
     get "/search", SearchController, :search
     get "/categories", SearchController, :categories
     get "/categories/:category", SearchController, :by_category

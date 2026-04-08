@@ -19,4 +19,3 @@ defmodule Wardley.Maps.Node do
     |> validate_number(:y_pct, greater_than_or_equal_to: 0.0, less_than_or_equal_to: 100.0)
   end
 end
-

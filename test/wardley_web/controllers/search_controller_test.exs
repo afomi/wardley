@@ -75,6 +75,35 @@ defmodule WardleyWeb.SearchControllerTest do
     end
   end
 
+  describe "GET /api/suggestions" do
+    test "returns matching component names", %{conn: conn} do
+      conn = get(conn, ~p"/api/suggestions?q=cloud")
+      response = json_response(conn, 200)
+
+      assert is_list(response["suggestions"])
+      assert length(response["suggestions"]) >= 1
+
+      suggestion = hd(response["suggestions"])
+      assert suggestion["text"] == "Cloud Platform"
+      assert is_integer(suggestion["usage_count"])
+      assert is_integer(suggestion["map_count"])
+    end
+
+    test "returns empty list for empty query", %{conn: conn} do
+      conn = get(conn, ~p"/api/suggestions?q=")
+      response = json_response(conn, 200)
+
+      assert response["suggestions"] == []
+    end
+
+    test "returns empty list for no matches", %{conn: conn} do
+      conn = get(conn, ~p"/api/suggestions?q=zzzznonexistent")
+      response = json_response(conn, 200)
+
+      assert response["suggestions"] == []
+    end
+  end
+
   describe "GET /api/categories" do
     test "returns list of categories", %{conn: conn} do
       conn = get(conn, ~p"/api/categories")

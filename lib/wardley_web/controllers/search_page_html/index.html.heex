@@ -7,8 +7,8 @@
       Find components, maps, and personas across your organization.
     </p>
   </header>
-
-  <!-- Search Form -->
+  
+<!-- Search Form -->
   <form
     action={~p"/search"}
     method="get"
@@ -46,26 +46,24 @@
       </button>
     </div>
   </form>
-
-  <!-- Results -->
+  
+<!-- Results -->
   <%= if @query != "" do %>
     <div class="space-y-8">
       <!-- Summary -->
       <p class="text-sm text-slate-500">
-        Found
-        <span class="font-medium text-slate-700 dark:text-slate-300">
+        Found <span class="font-medium text-slate-700 dark:text-slate-300">
           <%= length(@results.nodes) %> components
-        </span>,
-        <span class="font-medium text-slate-700 dark:text-slate-300">
+        </span>, <span class="font-medium text-slate-700 dark:text-slate-300">
           <%= length(@results.maps) %> maps
         </span>, and
         <span class="font-medium text-slate-700 dark:text-slate-300">
-          <%= length(@results.personas) %> personas
+          {length(@results.personas)} personas
         </span>
-        for "<%= @query %>"
+        for "{@query}"
       </p>
-
-      <!-- Nodes -->
+      
+<!-- Nodes -->
       <%= if length(@results.nodes) > 0 do %>
         <section>
           <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
@@ -95,23 +93,26 @@
                 <div class="flex items-start justify-between gap-4">
                   <div>
                     <h3 class="font-medium text-slate-900 dark:text-white">
-                      <%= node.text %>
+                      {node.text}
                     </h3>
                     <p class="mt-1 text-sm text-slate-500">
-                      <%= node.map_name %>
+                      {node.map_name}
                       <%= if node.metadata["category"] do %>
-                        · <span class="text-slate-600 dark:text-slate-400"><%= node.metadata["category"] %></span>
+                        ·
+                        <span class="text-slate-600 dark:text-slate-400">
+                          {node.metadata["category"]}
+                        </span>
                       <% end %>
                     </p>
                     <%= if node.metadata["description"] do %>
                       <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
-                        <%= node.metadata["description"] %>
+                        {node.metadata["description"]}
                       </p>
                     <% end %>
                   </div>
                   <div class="flex-shrink-0 text-right">
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
-                      <%= Float.round(node.x_pct, 0) %>% evolution
+                      {Float.round(node.x_pct, 0)}% evolution
                     </span>
                   </div>
                 </div>
@@ -120,8 +121,8 @@
           </div>
         </section>
       <% end %>
-
-      <!-- Maps -->
+      
+<!-- Maps -->
       <%= if length(@results.maps) > 0 do %>
         <section>
           <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
@@ -149,18 +150,18 @@
                 class="block p-4 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-green-300 dark:hover:border-green-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition"
               >
                 <h3 class="font-medium text-slate-900 dark:text-white">
-                  <%= map.name %>
+                  {map.name}
                 </h3>
                 <p class="mt-1 text-sm text-slate-500">
-                  <%= map.node_count %> components
+                  {map.node_count} components
                 </p>
               </a>
             <% end %>
           </div>
         </section>
       <% end %>
-
-      <!-- Personas -->
+      
+<!-- Personas -->
       <%= if length(@results.personas) > 0 do %>
         <section>
           <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
@@ -189,7 +190,7 @@
               >
                 <div class="flex items-center gap-2">
                   <h3 class="font-medium text-slate-900 dark:text-white">
-                    <%= persona.name %>
+                    {persona.name}
                   </h3>
                   <%= if persona.is_default do %>
                     <span class="px-1.5 py-0.5 text-xs bg-slate-200 dark:bg-slate-700 rounded">
@@ -199,7 +200,7 @@
                 </div>
                 <%= if persona.description do %>
                   <p class="mt-1 text-sm text-slate-500 line-clamp-2">
-                    <%= persona.description %>
+                    {persona.description}
                   </p>
                 <% end %>
               </a>
@@ -207,8 +208,8 @@
           </div>
         </section>
       <% end %>
-
-      <!-- No results -->
+      
+<!-- No results -->
       <%= if length(@results.nodes) == 0 and length(@results.maps) == 0 and length(@results.personas) == 0 do %>
         <div class="text-center py-12">
           <svg
@@ -266,7 +267,7 @@
                 href={~p"/search?q=#{category}"}
                 class="inline-flex items-center px-3 py-1.5 rounded-full text-sm bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition"
               >
-                <%= category %>
+                {category}
               </a>
             <% end %>
           </div>

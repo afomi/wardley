@@ -42,7 +42,7 @@
         <div>
           <div class="flex items-center gap-3">
             <h1 class="text-2xl font-semibold text-slate-900 dark:text-white">
-              <%= @persona.name %>
+              {@persona.name}
             </h1>
             <%= if @persona.is_default do %>
               <span class="px-2.5 py-0.5 text-xs font-medium bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded">
@@ -52,14 +52,14 @@
           </div>
           <%= if @persona.description do %>
             <p class="mt-2 text-slate-600 dark:text-slate-400">
-              <%= @persona.description %>
+              {@persona.description}
             </p>
           <% end %>
         </div>
       </div>
     </header>
-
-    <!-- Metadata Section -->
+    
+<!-- Metadata Section -->
     <%= if @persona.metadata && map_size(@persona.metadata) > 0 do %>
       <div class="mb-8">
         <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">
@@ -69,19 +69,19 @@
           <%= for {key, value} <- @persona.metadata do %>
             <div class="p-4 rounded-lg bg-slate-50 dark:bg-slate-800/50">
               <dt class="text-sm font-medium text-slate-500 dark:text-slate-400">
-                <%= key |> to_string() |> String.replace("_", " ") |> String.capitalize() %>
+                {key |> to_string() |> String.replace("_", " ") |> String.capitalize()}
               </dt>
               <dd class="mt-1 text-slate-900 dark:text-white">
                 <%= if is_list(value) do %>
                   <div class="flex flex-wrap gap-1.5 mt-1">
                     <%= for item <- value do %>
                       <span class="inline-flex px-2 py-0.5 text-sm bg-slate-200 dark:bg-slate-700 rounded">
-                        <%= item %>
+                        {item}
                       </span>
                     <% end %>
                   </div>
                 <% else %>
-                  <%= value %>
+                  {value}
                 <% end %>
               </dd>
             </div>
@@ -89,20 +89,20 @@
         </dl>
       </div>
     <% end %>
-
-    <!-- Timestamps -->
+    
+<!-- Timestamps -->
     <div class="pt-6 border-t border-slate-200 dark:border-slate-700">
       <dl class="flex gap-8 text-sm text-slate-500">
         <div>
           <dt class="font-medium">Created</dt>
           <dd class="mt-1">
-            <%= Calendar.strftime(@persona.inserted_at, "%B %d, %Y at %H:%M") %>
+            {Calendar.strftime(@persona.inserted_at, "%B %d, %Y at %H:%M")}
           </dd>
         </div>
         <div>
           <dt class="font-medium">Updated</dt>
           <dd class="mt-1">
-            <%= Calendar.strftime(@persona.updated_at, "%B %d, %Y at %H:%M") %>
+            {Calendar.strftime(@persona.updated_at, "%B %d, %Y at %H:%M")}
           </dd>
         </div>
       </dl>

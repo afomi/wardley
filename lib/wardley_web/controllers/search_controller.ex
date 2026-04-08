@@ -25,6 +25,22 @@ defmodule WardleyWeb.SearchController do
   end
 
   @doc """
+  Suggest component names for type-ahead.
+  GET /api/suggestions?q=query&limit=10
+  """
+  def suggestions(conn, params) do
+    query = params["q"] || ""
+    limit = parse_int(params["limit"], 10)
+
+    if String.length(query) < 1 do
+      json(conn, %{suggestions: []})
+    else
+      suggestions = Search.suggest_components(query, limit)
+      json(conn, %{suggestions: suggestions})
+    end
+  end
+
+  @doc """
   List all categories.
   GET /api/categories
   """
@@ -61,6 +77,7 @@ defmodule WardleyWeb.SearchController do
   end
 
   defp parse_int(nil, default), do: default
+
   defp parse_int(str, default) do
     case Integer.parse(str) do
       {int, _} -> int
