@@ -42,16 +42,27 @@ defmodule Wardley.Maps do
   end
 
   def create_node(attrs) do
-    %Node{} |> Node.changeset(attrs) |> Repo.insert()
+    with {:ok, node} <- %Node{} |> Node.changeset(attrs) |> Repo.insert() do
+      broadcast(node.map_id, :map_updated)
+      {:ok, node}
+    end
   end
 
   def update_node(%Node{} = node, attrs) do
-    node |> Node.changeset(attrs) |> Repo.update()
+    with {:ok, node} <- node |> Node.changeset(attrs) |> Repo.update() do
+      broadcast(node.map_id, :map_updated)
+      {:ok, node}
+    end
   end
 
   def get_node!(id), do: Repo.get!(Node, id)
 
-  def delete_node(%Node{} = node), do: Repo.delete(node)
+  def delete_node(%Node{} = node) do
+    with {:ok, node} <- Repo.delete(node) do
+      broadcast(node.map_id, :map_updated)
+      {:ok, node}
+    end
+  end
 
   # Edges
   def list_edges(map_id) do
@@ -59,12 +70,27 @@ defmodule Wardley.Maps do
   end
 
   def create_edge(attrs) do
-    %Edge{} |> Edge.changeset(attrs) |> Repo.insert()
+    with {:ok, edge} <- %Edge{} |> Edge.changeset(attrs) |> Repo.insert() do
+      broadcast(edge.map_id, :map_updated)
+      {:ok, edge}
+    end
   end
 
   def get_edge!(id), do: Repo.get!(Edge, id)
-  def update_edge(%Edge{} = edge, attrs), do: edge |> Edge.changeset(attrs) |> Repo.update()
-  def delete_edge(%Edge{} = edge), do: Repo.delete(edge)
+
+  def update_edge(%Edge{} = edge, attrs) do
+    with {:ok, edge} <- edge |> Edge.changeset(attrs) |> Repo.update() do
+      broadcast(edge.map_id, :map_updated)
+      {:ok, edge}
+    end
+  end
+
+  def delete_edge(%Edge{} = edge) do
+    with {:ok, edge} <- Repo.delete(edge) do
+      broadcast(edge.map_id, :map_updated)
+      {:ok, edge}
+    end
+  end
 
   # Fragments
 
@@ -190,5 +216,15 @@ defmodule Wardley.Maps do
 
   defp clamp(val, min_val, max_val) do
     val |> max(min_val) |> min(max_val)
+  end
+
+  # PubSub
+
+  def subscribe(map_id) do
+    Phoenix.PubSub.subscribe(Wardley.PubSub, "map:#{map_id}")
+  end
+
+  defp broadcast(map_id, event) do
+    Phoenix.PubSub.broadcast(Wardley.PubSub, "map:#{map_id}", {event, map_id})
   end
 end

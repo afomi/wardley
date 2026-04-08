@@ -14,6 +14,9 @@ defmodule WardleyWeb.Endpoint do
   # Health check for ALB — responds before force_ssl redirect
   plug :healthz
 
+  socket "/socket", WardleyWeb.UserSocket,
+    websocket: true
+
   socket "/live", Phoenix.LiveView.Socket,
     websocket: [connect_info: [session: @session_options]],
     longpoll: [connect_info: [session: @session_options]]

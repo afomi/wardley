@@ -1,6 +1,7 @@
 import * as THREE from "three"
 import * as dsl from "./wardley-dsl"
 import * as github from "./github-sync"
+import {Socket} from "phoenix"
 
 const csrfToken = () => document.querySelector("meta[name='csrf-token']")?.getAttribute("content")
 
@@ -2001,6 +2002,20 @@ export function initMapPage() {
       render()
       syncCodeFromVisual()
       renderLayerStackUI()
+
+      // Connect to channel for real-time updates
+      if (map?.id) {
+        const socket = new Socket("/socket")
+        socket.connect()
+        const channel = socket.channel(`map:${map.id}`)
+        channel.on("map_updated", ({ nodes: newNodes, edges: newEdges }) => {
+          state.nodes = newNodes
+          state.edges = newEdges
+          render()
+          syncCodeFromVisual()
+        })
+        channel.join()
+      }
     })
     .catch(console.error)
 
