@@ -59,7 +59,7 @@ defmodule WardleyWeb.Layouts do
             href={~p"/map"}
             class="px-3 py-1.5 text-sm rounded-md text-slate-700 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800 transition"
           >
-            Map
+            Example Map
           </a>
           <a
             href={~p"/gameplay"}
@@ -73,6 +73,31 @@ defmodule WardleyWeb.Layouts do
           >
             Personas
           </a>
+          <%= if @current_scope && @current_scope.user do %>
+            <span class="hidden md:inline px-3 py-1.5 text-sm text-slate-500 dark:text-slate-400">
+              {@current_scope.user.email}
+            </span>
+            <a
+              href={~p"/users/settings"}
+              class="px-3 py-1.5 text-sm rounded-md text-slate-700 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800 transition"
+            >
+              Settings
+            </a>
+            <.link
+              href={~p"/users/log-out"}
+              method="delete"
+              class="px-3 py-1.5 text-sm rounded-md text-slate-700 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800 transition"
+            >
+              Log out
+            </.link>
+          <% else %>
+            <a
+              href={~p"/login"}
+              class="px-3 py-1.5 text-sm rounded-md text-slate-700 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800 transition"
+            >
+              Log in
+            </a>
+          <% end %>
         </nav>
       </div>
     </header>

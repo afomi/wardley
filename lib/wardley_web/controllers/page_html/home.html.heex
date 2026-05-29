@@ -1,164 +1,100 @@
-<Layouts.app flash={@flash}>
-  <div class="max-w-3xl mx-auto">
-    <h1 class="text-3xl font-bold text-slate-900 dark:text-slate-100">
-      Wardley Mapping
-    </h1>
-
-    <p class="mt-6 text-lg text-slate-700 dark:text-slate-300 leading-relaxed">
-      Wardley Mapping is a strategy tool created by Simon Wardley that helps organizations
-      visualize their value chains and understand how components evolve over time.
-      By mapping the landscape, teams can make better decisions about where to invest,
-      what to build vs. buy, and how to respond to competitive threats.
-    </p>
-
-    <section class="mt-12">
-      <h2 class="text-xl font-semibold text-slate-900 dark:text-slate-100">
-        Key Concepts
-      </h2>
-      <ul class="mt-4 space-y-3 text-slate-700 dark:text-slate-300">
-        <li class="flex gap-3">
-          <span class="text-slate-400">•</span>
-          <span>
-            <strong class="text-slate-900 dark:text-slate-100">Value Chain (Y-axis):</strong>
-            Components are positioned vertically based on visibility to the user,
-            with user-facing components at the top.
-          </span>
-        </li>
-        <li class="flex gap-3">
-          <span class="text-slate-400">•</span>
-          <span>
-            <strong class="text-slate-900 dark:text-slate-100">Evolution (X-axis):</strong>
-            Components move from Genesis (novel) through Custom-Built and Product
-            to Commodity (ubiquitous) as they mature.
-          </span>
-        </li>
-        <li class="flex gap-3">
-          <span class="text-slate-400">•</span>
-          <span>
-            <strong class="text-slate-900 dark:text-slate-100">Movement:</strong>
-            Everything evolves from left to right due to competition and user demand.
-            Understanding this movement helps anticipate change.
-          </span>
-        </li>
-      </ul>
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <div class="mx-auto max-w-3xl">
+    <section class="space-y-5">
+      <h1 class="text-3xl font-bold text-slate-900 dark:text-slate-100">
+        Wardley Mapping
+      </h1>
+      <p class="text-lg leading-8 text-slate-700 dark:text-slate-300">
+        A Wardley map makes strategy visible: start with the user need, connect the
+        activities that create value, place each component by evolution, then choose
+        gameplay based on the landscape in front of you.
+      </p>
     </section>
 
-    <section class="mt-12">
-      <h2 class="text-xl font-semibold text-slate-900 dark:text-slate-100">
-        Learn More
-      </h2>
-
-      <div class="mt-6">
-        <h3 class="text-lg font-medium text-slate-800 dark:text-slate-200">
-          Introduction to Wardley Mapping
-        </h3>
-        <p class="mt-2 text-slate-600 dark:text-slate-400">
-          Simon Wardley's comprehensive introduction to value chain mapping:
-        </p>
-        <a
-          href="https://blog.gardeviance.org/2015/02/an-introduction-to-wardley-value-chain.html"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="mt-3 inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:underline"
-        >
-          <span>An Introduction to Wardley Value Chain Mapping</span>
-          <svg
-            class="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-            />
-          </svg>
-        </a>
-      </div>
-
-      <div class="mt-8">
-        <h3 class="text-lg font-medium text-slate-800 dark:text-slate-200">
-          Video: Crossing the River by Feeling the Stones
-        </h3>
-        <p class="mt-2 text-slate-600 dark:text-slate-400">
-          Simon Wardley's talk on strategy, mapping, and navigating uncertainty:
-        </p>
-        <div class="mt-4 aspect-video rounded-lg overflow-hidden bg-slate-200 dark:bg-slate-800">
-          <iframe
-            class="w-full h-full"
-            src="https://www.youtube.com/embed/2IW9L1uNMCs"
-            title="Crossing the River by Feeling the Stones - Simon Wardley"
-            frameborder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowfullscreen
-          >
-          </iframe>
+    <section class="mt-10 space-y-4" aria-label="Wardley mapping introduction">
+      <article class="grid gap-5 rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900 md:grid-cols-[180px_1fr]">
+        <img
+          src={~p"/images/wardley-value-connections-placeholder.svg"}
+          alt="LLM image prompt: Create a clean product-style illustration for Wardley mapping that shows a user need at the top connected downward through a value stream of capabilities, activities, and systems. Use a white background, slate labels, thin connecting lines, and restrained accent colors. No logos, no people, no decorative gradients."
+          class="aspect-[4/3] w-full rounded-md border border-slate-200 object-cover dark:border-slate-700"
+        />
+        <div>
+          <p class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            1. Value Stream Connections
+          </p>
+          <h2 class="mt-2 text-xl font-semibold text-slate-900 dark:text-slate-100">
+            Show how value is created
+          </h2>
+          <p class="mt-3 leading-7 text-slate-700 dark:text-slate-300">
+            Start with a user need. Connect the activities, capabilities, data, and
+            systems that make that need possible.
+          </p>
         </div>
-      </div>
+      </article>
+
+      <article class="grid gap-5 rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900 md:grid-cols-[180px_1fr]">
+        <img
+          src={~p"/images/wardley-evolution-placeholder.svg"}
+          alt="LLM image prompt: Create a clean instructional illustration for Wardley mapping evolution. Show several connected map components positioned on a left-to-right axis labeled Genesis, Custom Built, Product, and Commodity. Emphasize movement from uncertainty to ubiquity with subtle arrows. Use a white background, slate typography, and restrained teal and amber accents."
+          class="aspect-[4/3] w-full rounded-md border border-slate-200 object-cover dark:border-slate-700"
+        />
+        <div>
+          <p class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            2. Evolution
+          </p>
+          <h2 class="mt-2 text-xl font-semibold text-slate-900 dark:text-slate-100">
+            Place each component by maturity
+          </h2>
+          <p class="mt-3 leading-7 text-slate-700 dark:text-slate-300">
+            Components move from novel and uncertain toward standard, common, and
+            industrialized. Their position changes how you should treat them.
+          </p>
+        </div>
+      </article>
+
+      <article class="grid gap-5 rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900 md:grid-cols-[180px_1fr]">
+        <img
+          src={~p"/images/wardley-gameplay-placeholder.svg"}
+          alt="LLM image prompt: Create a clean strategic gameplay illustration for Wardley mapping. Show a simple map with highlighted opportunities such as outsource commodity, build differentiation, remove bottleneck, and defend user experience. Use small callout tags, calm business-tool styling, white background, and restrained blue, green, and amber accents."
+          class="aspect-[4/3] w-full rounded-md border border-slate-200 object-cover dark:border-slate-700"
+        />
+        <div>
+          <p class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            3. Gameplay
+          </p>
+          <h2 class="mt-2 text-xl font-semibold text-slate-900 dark:text-slate-100">
+            Decide what to do next
+          </h2>
+          <p class="mt-3 leading-7 text-slate-700 dark:text-slate-300">
+            Use the map to pick moves: outsource commodities, invest in differentiation,
+            remove constraints, or change the terrain.
+          </p>
+        </div>
+      </article>
     </section>
 
-    <section class="mt-12">
-      <h2 class="text-xl font-semibold text-slate-900 dark:text-slate-100">
-        Get Started
-      </h2>
-      <div class="mt-6 grid gap-4 sm:grid-cols-2">
-        <a
-          href={~p"/map"}
-          class="group block rounded-lg border border-slate-200 dark:border-slate-700 p-6 hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-md transition"
-        >
-          <h3 class="text-lg font-medium text-slate-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400">
-            I want to create a map
-          </h3>
-          <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
-            Open the map editor to start plotting components, dependencies, and evolution.
-          </p>
-        </a>
-        <a
-          href={~p"/gameplay"}
-          class="group block rounded-lg border border-slate-200 dark:border-slate-700 p-6 hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-md transition"
-        >
-          <h3 class="text-lg font-medium text-slate-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400">
-            I want to explore strategy
-          </h3>
-          <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
-            Use the Strategy Cycle to guide your team through the OODA loop.
-          </p>
-        </a>
-      </div>
-    </section>
-
-    <section class="mt-12 pt-8 border-t border-slate-200 dark:border-slate-800">
-      <h2 class="text-xl font-semibold text-slate-900 dark:text-slate-100">
-        About This Tool
-      </h2>
-      <p class="mt-4 text-slate-700 dark:text-slate-300">
-        Wardley.app is an interactive tool for creating Wardley Maps, exploring strategic
-        gameplay, and managing personas. It was built with inspiration from <a
-          href="https://blog.gardeviance.org/"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="text-blue-600 dark:text-blue-400 hover:underline"
-        >Simon Wardley's writings</a>, talks, and the vibrant mapping community.
-      </p>
-      <p class="mt-4 text-slate-600 dark:text-slate-400 text-sm">
-        <a
-          href="https://github.com/afomi/wardley"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
-        >
-          <svg
-            class="w-4 h-4"
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-          </svg>
-          Source on GitHub
-        </a>
-      </p>
+    <section class="mt-10 flex flex-col gap-3 sm:flex-row">
+      <a
+        href={~p"/map"}
+        class="inline-flex items-center justify-center rounded-md bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-950 dark:hover:bg-white"
+      >
+        Open the map
+      </a>
+      <a
+        href={~p"/gameplay"}
+        class="inline-flex items-center justify-center rounded-md border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+      >
+        Explore gameplay
+      </a>
+      <a
+        href="https://blog.gardeviance.org/2015/02/an-introduction-to-wardley-value-chain.html"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-flex items-center justify-center gap-1.5 rounded-md px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+      >
+        Simon Wardley's introduction
+        <.icon name="hero-arrow-top-right-on-square" class="size-4" />
+      </a>
     </section>
   </div>
 </Layouts.app>
