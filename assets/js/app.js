@@ -53,6 +53,21 @@ liveSocket.connect()
 // >> liveSocket.disableLatencySim()
 window.liveSocket = liveSocket
 
+window.addEventListener("wardley:copy-token", async (event) => {
+  const target = event.target
+  const token = target?.value || target?.textContent || ""
+  if (!token) return
+
+  try {
+    await navigator.clipboard.writeText(token)
+  } catch (_error) {
+    if (typeof target.select === "function") {
+      target.select()
+      document.execCommand("copy")
+    }
+  }
+})
+
 // The lines below enable quality of life phoenix_live_reload
 // development features:
 //

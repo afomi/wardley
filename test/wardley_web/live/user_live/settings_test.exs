@@ -14,6 +14,8 @@ defmodule WardleyWeb.UserLive.SettingsTest do
 
       assert html =~ "Change Email"
       assert html =~ "Save Password"
+      assert html =~ "API token"
+      assert html =~ "Generate token"
     end
 
     test "redirects if user is not logged in", %{conn: conn} do
@@ -160,6 +162,29 @@ defmodule WardleyWeb.UserLive.SettingsTest do
     end
   end
 
+  describe "api token form" do
+    setup %{conn: conn} do
+      user = user_fixture()
+      %{conn: log_in_user(conn, user), user: user}
+    end
+
+    test "generates a 30-day API token and shows it once", %{conn: conn, user: user} do
+      {:ok, lv, _html} = live(conn, ~p"/users/settings")
+
+      html =
+        lv
+        |> form("#api-token-form", %{"api_token" => %{"label" => "codex"}})
+        |> render_submit()
+
+      assert has_element?(lv, "#api-token-result")
+      assert html =~ "Token generated. Copy it now"
+      assert html =~ "Expires "
+
+      token = api_token_value(html)
+      assert Accounts.get_user_by_api_token(token).user.id == user.id
+    end
+  end
+
   describe "confirm email" do
     setup %{conn: conn} do
       user = user_fixture()
@@ -208,5 +233,10 @@ defmodule WardleyWeb.UserLive.SettingsTest do
       assert %{"error" => message} = flash
       assert message == "You must log in to access this page."
     end
+  end
+
+  defp api_token_value(html) do
+    [_, token] = Regex.run(~r/id="api-token-value"[^>]*value="([^"]+)"/, html)
+    token
   end
 end
