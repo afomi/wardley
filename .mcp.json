@@ -2,7 +2,10 @@
   "mcpServers": {
     "wardley": {
       "command": "mix",
-      "args": ["wardley.mcp"]
+      "args": ["wardley.mcp"],
+      "env": {
+        "WARDLEY_API_TOKEN": "${WARDLEY_API_TOKEN}"
+      }
     }
   }
 }

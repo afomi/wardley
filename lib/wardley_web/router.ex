@@ -32,6 +32,7 @@ defmodule WardleyWeb.Router do
     get "/personas", PersonasPageController, :index
     get "/personas/:id", PersonasPageController, :show
     get "/gameplay", GameplayController, :show
+    get "/developers", DevelopersController, :index
   end
 
   scope "/auth", WardleyWeb do

@@ -1,25 +1,83 @@
 # Wardley.app
 
-Wardley.app is a Phoenix web application for creating and editing Wardley Maps.
-
-## LLM Integration
-
-Repository guide:
-
-- LLM_INTEGRATION.md
-
-Use the REST API for live browser updates. The browser editor loads `GET /api/map` and subscribes to the active map through Phoenix Channels, so edits made through the running Phoenix app are reflected in the open map.
+Wardley.app is a Phoenix web application for creating, inspecting, and editing Wardley Maps.
 
 Default local base URL:
 
 - http://localhost:4000
 
-## Auth
+## LLM Integration
 
-Local development API access is currently unauthenticated. Only trusted local callers should use write endpoints. Do not invent credentials. If deployment adds auth, use an out-of-band bearer token and never place secrets in prompts, node text, metadata, URLs, or logs.
+Use the HTTP API for browser-visible map edits. The browser editor loads `GET /api/map` and subscribes to the active map through Phoenix Channels, so mutations made through the running Phoenix app are reflected in the open map.
+
+Repository guide:
+
+- LLM_INTEGRATION.md
+
+Route-derived API reference:
+
+- /developers
+
+## Authentication
+
+Use a Wardley API token when one is available.
+
+How a logged-in user gets a token:
+
+1. Open `/login`.
+2. Sign in with GitHub.
+3. Open `Settings` from the main navigation, or go to `/users/settings`.
+4. Use the `API token` panel to generate a 30-day token.
+5. Copy the token immediately. It is only shown once.
+
+Use the copied token on API requests:
+
+```text
+Authorization: Bearer <WARDLEY_API_TOKEN>
+```
+
+Token safety:
+
+- Never place tokens in prompts, map names, node text, metadata, URLs, screenshots, commits, or logs.
+- Prefer an environment variable such as `WARDLEY_API_TOKEN`.
+- If a token is missing, ask the user to generate one in Settings. Do not invent credentials.
+
+Verify a token:
+
+```sh
+curl -H "Authorization: Bearer $WARDLEY_API_TOKEN" \
+  http://localhost:4000/api/me
+```
+
+## Productive Workflow
+
+1. Fetch the active browser map before editing:
+
+   ```sh
+   curl -H "Authorization: Bearer $WARDLEY_API_TOKEN" \
+     http://localhost:4000/api/map
+   ```
+
+2. Use the returned `map.id` for edits that should appear in the current editor session.
+
+3. Read compact DSL when reasoning about structure:
+
+   ```sh
+   curl -H "Authorization: Bearer $WARDLEY_API_TOKEN" \
+     http://localhost:4000/api/maps/1/dsl
+   ```
+
+4. Propose a small change set before broad edits.
+
+5. Apply node and edge operations.
+
+6. Fetch the map again and summarize what changed.
 
 ## Key Endpoints
 
+For the canonical route-derived endpoint table, use `/developers`.
+
+- `GET /api/me` - validate bearer token and identify the token user.
 - `GET /api/map` - active/default map for the editor.
 - `GET /api/maps` - list maps.
 - `GET /api/maps/:id` - map JSON with nodes and edges.
@@ -31,20 +89,139 @@ Local development API access is currently unauthenticated. Only trusted local ca
 - `POST /api/edges` - create a dependency edge.
 - `PATCH /api/edges/:id` - update edge metadata.
 - `DELETE /api/edges/:id` - delete an edge.
+- `GET /api/search?q=<query>` - search maps, nodes, and personas.
+- `GET /api/suggestions?q=<query>` - autocomplete component names.
+
+Use JSON for write requests:
+
+```text
+content-type: application/json
+```
+
+## Example Mutations
+
+Create a node on the active/default map:
+
+```sh
+curl -X POST http://localhost:4000/api/nodes \
+  -H "Authorization: Bearer $WARDLEY_API_TOKEN" \
+  -H "content-type: application/json" \
+  -d '{"text":"Customer","x_pct":10,"y_pct":10,"metadata":{"type":"anchor"}}'
+```
+
+Create a node on a specific map:
+
+```sh
+curl -X POST http://localhost:4000/api/nodes \
+  -H "Authorization: Bearer $WARDLEY_API_TOKEN" \
+  -H "content-type: application/json" \
+  -d '{"map_id":1,"text":"API","x_pct":55,"y_pct":45}'
+```
+
+Move or rename a node:
+
+```sh
+curl -X PATCH http://localhost:4000/api/nodes/1 \
+  -H "Authorization: Bearer $WARDLEY_API_TOKEN" \
+  -H "content-type: application/json" \
+  -d '{"text":"Public API","x_pct":60,"y_pct":42}'
+```
+
+Connect two nodes:
+
+```sh
+curl -X POST http://localhost:4000/api/edges \
+  -H "Authorization: Bearer $WARDLEY_API_TOKEN" \
+  -H "content-type: application/json" \
+  -d '{"source_id":1,"target_id":2,"metadata":{"relationship":"depends_on"}}'
+```
 
 ## Coordinates
 
 REST uses percentages:
 
 - `x_pct`: evolution, 0 genesis to 100 commodity.
-- `y_pct`: visibility, 0 most visible to 100 least visible.
+- `y_pct`: visibility, 0 most visible / closest to user need to 100 least visible / deep infrastructure.
 
-OWM DSL uses `[visibility, evolution]` from 0.0 to 1.0.
+OWM DSL uses `[visibility, evolution]` from `0.0` to `1.0`.
+
+In exported DSL, visibility is converted from API `y_pct` as `(100 - y_pct) / 100`.
 
 ## Map Rules
 
 - Start with user needs.
+- Components should be capabilities, activities, services, data, practices, or infrastructure.
 - Edges mean `source` depends on `target`.
 - Value chain is dependency structure, not process sequence.
+- Put user-visible needs near the top and dependencies lower in the chain.
+- Put commodity utilities to the right and novel/uncertain capabilities to the left.
 - Preserve assumptions and uncertainty.
 - Ask before broad destructive edits.
+
+## Elixir Client
+
+`Wardley.Client` wraps the REST API for use from scripts, Mix tasks, and other Elixir projects.
+
+```elixir
+Wardley.Client.list_maps()
+Wardley.Client.get_map(7)
+Wardley.Client.get_dsl(7)
+Wardley.Client.create_node(7, "Customer", x_pct: 75, y_pct: 5)
+Wardley.Client.connect(source_id, target_id)
+Wardley.Client.move_node(node_id, x_pct: 60, y_pct: 20)
+Wardley.Client.delete_node(node_id)
+Wardley.Client.search("teapot")
+```
+
+Reads `WARDLEY_API_TOKEN` and `WARDLEY_API_URL` from the environment.
+
+## Environment Variables
+
+- `WARDLEY_API_TOKEN` — bearer token for authenticated API access. Generate one from Settings in the web UI.
+- `WARDLEY_API_URL` — base URL override (default: `http://localhost:4000`).
+
+For local development with direnv, add to `.env`:
+
+```sh
+WARDLEY_API_TOKEN=wrdly_...
+```
+
+## Claude Skill
+
+A `/wardley` skill is available for Claude Code sessions.
+It analyzes the current project and creates a Wardley Map via the REST API.
+
+Usage from any project:
+
+```
+/wardley
+/wardley map the deployment pipeline
+```
+
+## MCP
+
+The repository includes a stdio MCP server:
+
+```sh
+mix wardley.mcp
+```
+
+MCP can inspect and edit maps through the same domain context.
+For live browser updates, prefer the HTTP API against the running Phoenix server.
+
+To use MCP from another project, add to `.mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "wardley": {
+      "command": "mix",
+      "args": ["wardley.mcp"],
+      "cwd": "~/workspace/wardley",
+      "env": {
+        "WARDLEY_API_TOKEN": "${WARDLEY_API_TOKEN}"
+      }
+    }
+  }
+}
+```

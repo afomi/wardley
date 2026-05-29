@@ -31,6 +31,10 @@ defmodule WardleyWeb.Layouts do
     default: nil,
     doc: "the current [scope](https://hexdocs.pm/phoenix/scopes.html)"
 
+  attr :container_class, :string,
+    default: "mx-auto max-w-2xl space-y-4",
+    doc: "classes for the main content container"
+
   slot :inner_block, required: true
 
   def app(assigns) do
@@ -73,6 +77,12 @@ defmodule WardleyWeb.Layouts do
           >
             Personas
           </a>
+          <a
+            href={~p"/developers"}
+            class="px-3 py-1.5 text-sm rounded-md text-slate-700 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800 transition"
+          >
+            Developers
+          </a>
           <%= if @current_scope && @current_scope.user do %>
             <span class="hidden md:inline px-3 py-1.5 text-sm text-slate-500 dark:text-slate-400">
               {@current_scope.user.email}
@@ -105,7 +115,7 @@ defmodule WardleyWeb.Layouts do
     <.search_modal />
 
     <main class="px-4 py-12 sm:px-6 lg:px-8">
-      <div class="mx-auto max-w-2xl space-y-4">
+      <div class={@container_class}>
         {render_slot(@inner_block)}
       </div>
     </main>
