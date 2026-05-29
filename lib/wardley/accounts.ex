@@ -91,30 +91,37 @@ defmodule Wardley.Accounts do
   def find_or_create_from_oauth(provider, %{uid: uid, email: email} = info)
       when is_binary(provider) do
     provider = to_string(provider)
-    uid = to_string(uid)
+    uid = if is_nil(uid), do: nil, else: to_string(uid)
 
-    if is_nil(email) or email == "" do
-      {:error, :email_required}
-    else
-      Repo.transact(fn ->
-        case Repo.get_by(UserIdentity, provider: provider, uid: uid) do
-          %UserIdentity{user_id: user_id} ->
-            {:ok, Repo.get!(User, user_id)}
+    cond do
+      is_nil(uid) or uid == "" ->
+        {:error, :uid_required}
 
-          nil ->
-            case Repo.get_by(User, email: email) do
-              %User{} = user ->
-                create_identity(user, provider, uid, info)
-                {:ok, user}
+      is_nil(email) or email == "" ->
+        {:error, :email_required}
 
-              nil ->
-                with {:ok, user} <- create_oauth_user(email),
-                     :ok <- create_identity(user, provider, uid, info) do
+      true ->
+        Repo.transact(fn ->
+          case Repo.get_by(UserIdentity, provider: provider, uid: uid) do
+            %UserIdentity{user_id: user_id} = identity ->
+              with {:ok, _identity} <- update_identity(identity, info) do
+                {:ok, Repo.get!(User, user_id)}
+              end
+
+            nil ->
+              case Repo.get_by(User, email: email) do
+                %User{} = user ->
+                  {:ok, _identity} = create_identity(user, provider, uid, info)
                   {:ok, user}
-                end
-            end
-        end
-      end)
+
+                nil ->
+                  with {:ok, user} <- create_oauth_user(email),
+                       {:ok, _identity} <- create_identity(user, provider, uid, info) do
+                    {:ok, user}
+                  end
+              end
+          end
+        end)
     end
   end
 
@@ -131,14 +138,28 @@ defmodule Wardley.Accounts do
       user_id: user.id,
       provider: provider,
       uid: uid,
+      access_token: Map.get(info, :access_token),
+      refresh_token: Map.get(info, :refresh_token),
+      token_expires_at: Map.get(info, :token_expires_at),
       raw_info: Map.get(info, :raw_info, %{})
     }
 
     %UserIdentity{}
     |> UserIdentity.changeset(attrs)
-    |> Repo.insert!()
+    |> Repo.insert()
+  end
 
-    :ok
+  defp update_identity(identity, info) do
+    attrs = %{
+      access_token: Map.get(info, :access_token),
+      refresh_token: Map.get(info, :refresh_token),
+      token_expires_at: Map.get(info, :token_expires_at),
+      raw_info: Map.get(info, :raw_info, %{})
+    }
+
+    identity
+    |> UserIdentity.changeset(attrs)
+    |> Repo.update()
   end
 
   ## Settings

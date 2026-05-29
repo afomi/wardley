@@ -4,7 +4,7 @@ defmodule Wardley.AccountsTest do
   alias Wardley.Accounts
 
   import Wardley.AccountsFixtures
-  alias Wardley.Accounts.{User, UserToken}
+  alias Wardley.Accounts.{ApiToken, User, UserIdentity, UserToken}
 
   describe "get_user_by_email/1" do
     test "does not return the user if the email does not exist" do
@@ -370,6 +370,85 @@ defmodule Wardley.AccountsTest do
     end
   end
 
+  describe "find_or_create_from_oauth/2" do
+    test "creates a confirmed user and GitHub identity" do
+      info = oauth_info()
+
+      assert {:ok, user} = Accounts.find_or_create_from_oauth("github", info)
+      assert user.email == info.email
+      assert user.confirmed_at
+      refute user.hashed_password
+
+      identity = Repo.get_by!(UserIdentity, provider: "github", uid: info.uid)
+      assert identity.user_id == user.id
+      assert identity.access_token == info.access_token
+      assert identity.raw_info["login"] == "octo"
+    end
+
+    test "links a GitHub identity to an existing user with the same email" do
+      user = user_fixture()
+      info = oauth_info(email: user.email)
+
+      assert {:ok, linked_user} = Accounts.find_or_create_from_oauth("github", info)
+      assert linked_user.id == user.id
+
+      identity = Repo.get_by!(UserIdentity, provider: "github", uid: info.uid)
+      assert identity.user_id == user.id
+    end
+
+    test "reuses the existing identity" do
+      info = oauth_info()
+      assert {:ok, user} = Accounts.find_or_create_from_oauth("github", info)
+
+      updated_info =
+        oauth_info(uid: info.uid, email: "other@example.com", access_token: "new-token")
+
+      assert {:ok, same_user} = Accounts.find_or_create_from_oauth("github", updated_info)
+      assert same_user.id == user.id
+
+      identity = Repo.get_by!(UserIdentity, provider: "github", uid: info.uid)
+      assert identity.access_token == "new-token"
+    end
+
+    test "requires an email from the OAuth provider" do
+      assert {:error, :email_required} =
+               Accounts.find_or_create_from_oauth("github", oauth_info(email: nil))
+    end
+  end
+
+  describe "api tokens" do
+    test "creates a 30-day token for a user" do
+      user = user_fixture()
+
+      assert {:ok, encoded_token, api_token} = Accounts.create_api_token(user, "codex")
+      assert is_binary(encoded_token)
+      assert api_token.label == "codex"
+      assert DateTime.diff(api_token.expires_at, DateTime.utc_now(:second), :day) in 29..30
+      refute api_token.token == encoded_token
+    end
+
+    test "gets the token with its user by raw bearer value" do
+      user = user_fixture()
+      {:ok, encoded_token, api_token} = Accounts.create_api_token(user, "codex")
+
+      assert found_token = Accounts.get_user_by_api_token(encoded_token)
+      assert found_token.id == api_token.id
+      assert found_token.user.id == user.id
+    end
+
+    test "rejects invalid and expired tokens" do
+      user = user_fixture()
+      {:ok, encoded_token, api_token} = Accounts.create_api_token(user, "codex")
+
+      expired_at = DateTime.add(DateTime.utc_now(:second), -1, :second)
+      api_token |> Ecto.Changeset.change(expires_at: expired_at) |> Repo.update!()
+
+      refute Accounts.get_user_by_api_token(encoded_token)
+      refute Accounts.get_user_by_api_token("not-a-token")
+      refute Repo.get_by(ApiToken, token: encoded_token)
+    end
+  end
+
   describe "deliver_login_instructions/2" do
     setup do
       %{user: unconfirmed_user_fixture()}
@@ -393,5 +472,17 @@ defmodule Wardley.AccountsTest do
     test "does not include password" do
       refute inspect(%User{password: "123456"}) =~ "password: \"123456\""
     end
+  end
+
+  defp oauth_info(attrs \\ []) do
+    attrs
+    |> Enum.into(%{
+      uid: "12345",
+      email: unique_user_email(),
+      access_token: "github-token",
+      refresh_token: nil,
+      token_expires_at: nil,
+      raw_info: %{"login" => "octo"}
+    })
   end
 end

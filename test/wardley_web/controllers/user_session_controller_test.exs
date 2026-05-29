@@ -68,7 +68,7 @@ defmodule WardleyWeb.UserSessionControllerTest do
         })
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Invalid email or password"
-      assert redirected_to(conn) == ~p"/users/log-in"
+      assert redirected_to(conn) == ~p"/login"
     end
   end
 
@@ -125,7 +125,7 @@ defmodule WardleyWeb.UserSessionControllerTest do
       assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
                "The link is invalid or it has expired."
 
-      assert redirected_to(conn) == ~p"/users/log-in"
+      assert redirected_to(conn) == ~p"/login"
     end
   end
 

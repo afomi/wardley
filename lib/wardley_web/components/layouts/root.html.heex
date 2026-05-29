@@ -173,7 +173,7 @@
   </head>
   <body>
     <ul class="menu menu-horizontal w-full relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
-      <%= if @current_scope do %>
+      <%= if @current_scope && @current_scope.user do %>
         <li>
           {@current_scope.user.email}
         </li>
@@ -185,10 +185,7 @@
         </li>
       <% else %>
         <li>
-          <.link href={~p"/users/register"}>Register</.link>
-        </li>
-        <li>
-          <.link href={~p"/users/log-in"}>Log in</.link>
+          <.link href={~p"/login"}>Log in</.link>
         </li>
       <% end %>
     </ul>

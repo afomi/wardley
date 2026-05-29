@@ -71,7 +71,7 @@ defmodule WardleyWeb.UserLive.ConfirmationTest do
 
       {:ok, _lv, html} =
         live(conn, ~p"/users/log-in/#{token}")
-        |> follow_redirect(conn, ~p"/users/log-in")
+        |> follow_redirect(conn, ~p"/login")
 
       assert html =~ "Magic link is invalid or it has expired"
     end
@@ -102,7 +102,7 @@ defmodule WardleyWeb.UserLive.ConfirmationTest do
 
       {:ok, _lv, html} =
         live(conn, ~p"/users/log-in/#{token}")
-        |> follow_redirect(conn, ~p"/users/log-in")
+        |> follow_redirect(conn, ~p"/login")
 
       assert html =~ "Magic link is invalid or it has expired"
     end
@@ -110,7 +110,7 @@ defmodule WardleyWeb.UserLive.ConfirmationTest do
     test "raises error for invalid token", %{conn: conn} do
       {:ok, _lv, html} =
         live(conn, ~p"/users/log-in/invalid-token")
-        |> follow_redirect(conn, ~p"/users/log-in")
+        |> follow_redirect(conn, ~p"/login")
 
       assert html =~ "Magic link is invalid or it has expired"
     end

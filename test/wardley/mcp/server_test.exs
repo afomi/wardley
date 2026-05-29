@@ -111,9 +111,7 @@ defmodule Wardley.MCP.ServerTest do
   describe "notifications" do
     test "notifications/initialized is silently accepted" do
       results =
-        call(
-          Jason.encode!(%{jsonrpc: "2.0", method: "notifications/initialized"})
-        )
+        call(Jason.encode!(%{jsonrpc: "2.0", method: "notifications/initialized"}))
 
       assert results == []
     end

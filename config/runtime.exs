@@ -47,7 +47,9 @@ if config_env() == :prod do
       if(System.get_env("DATABASE_SSL", "true") != "false",
         do: [
           verify: :verify_peer,
-          cacertfile: System.get_env("RDS_CA_CERT_PATH") || Application.app_dir(:wardley, "priv/ssl/aws-rds-ca.pem"),
+          cacertfile:
+            System.get_env("RDS_CA_CERT_PATH") ||
+              Application.app_dir(:wardley, "priv/ssl/aws-rds-ca.pem"),
           server_name_indication: db_hostname
         ],
         else: false

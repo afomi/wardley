@@ -20,6 +20,7 @@ defmodule WardleyWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
+    plug WardleyWeb.Plugs.ApiTokenAuth, optional: true
   end
 
   scope "/", WardleyWeb do
@@ -33,9 +34,18 @@ defmodule WardleyWeb.Router do
     get "/gameplay", GameplayController, :show
   end
 
+  scope "/auth", WardleyWeb do
+    pipe_through :browser
+
+    get "/:provider", OAuthController, :request
+    get "/:provider/callback", OAuthController, :callback
+  end
+
   # Other scopes may use custom stacks.
   scope "/api", WardleyWeb do
     pipe_through :api
+
+    get "/me", ApiTokenController, :show
 
     # Map and node/edge operations
     get "/map", MapAPIController, :map
@@ -102,6 +112,7 @@ defmodule WardleyWeb.Router do
     end
 
     post "/users/update-password", UserSessionController, :update_password
+    post "/api/tokens", ApiTokenController, :create
   end
 
   scope "/", WardleyWeb do
@@ -110,10 +121,11 @@ defmodule WardleyWeb.Router do
     live_session :current_user,
       on_mount: [{WardleyWeb.UserAuth, :mount_current_scope}] do
       live "/users/register", UserLive.Registration, :new
-      live "/users/log-in", UserLive.Login, :new
+      live "/login", UserLive.Login, :new
       live "/users/log-in/:token", UserLive.Confirmation, :new
     end
 
+    get "/users/log-in", UserSessionController, :new
     post "/users/log-in", UserSessionController, :create
     delete "/users/log-out", UserSessionController, :delete
   end

@@ -83,7 +83,7 @@ defmodule WardleyWeb.UserLive.Confirmation do
       {:ok,
        socket
        |> put_flash(:error, "Magic link is invalid or it has expired.")
-       |> push_navigate(to: ~p"/users/log-in")}
+       |> push_navigate(to: ~p"/login")}
     end
   end
 
