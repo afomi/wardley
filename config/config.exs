@@ -7,6 +7,19 @@
 # General application configuration
 import Config
 
+config :wardley, :scopes,
+  user: [
+    default: true,
+    module: Wardley.Accounts.Scope,
+    assign_key: :current_scope,
+    access_path: [:user, :id],
+    schema_key: :user_id,
+    schema_type: :id,
+    schema_table: :users,
+    test_data_fixture: Wardley.AccountsFixtures,
+    test_setup_helper: :register_and_log_in_user
+  ]
+
 config :wardley,
   ecto_repos: [Wardley.Repo],
   generators: [timestamp_type: :utc_datetime]
@@ -59,6 +72,12 @@ config :logger, :default_formatter,
 
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
+
+# Ueberauth OAuth providers
+config :ueberauth, Ueberauth,
+  providers: [
+    github: {Ueberauth.Strategy.Github, [default_scope: "user:email"]}
+  ]
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

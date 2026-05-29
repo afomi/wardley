@@ -115,6 +115,8 @@ const MIDDLE_INNER = 2.0
 const MIDDLE_OUTER = 3.3
 const INNER_INNER = 0.5
 const INNER_OUTER = 1.8
+const NORMAL_LABEL_COLOR = "#1e293b"
+const HOVER_LABEL_COLOR = "#f8fafc"
 
 function createArcShape(innerRadius, outerRadius, startAngle, endAngle) {
   const shape = new THREE.Shape()
@@ -236,7 +238,7 @@ export function initGameplay() {
   scene.add(centerGroup)
 
   // Create text labels using canvas
-  function createTextSprite(text, fontSize, color, yOffset = 0) {
+  function createTextTexture(text, fontSize, color) {
     const canvas = document.createElement("canvas")
     const ctx = canvas.getContext("2d")
     canvas.width = 256
@@ -248,14 +250,47 @@ export function initGameplay() {
     ctx.textBaseline = "middle"
     ctx.fillText(text, 128, 32)
 
-    const texture = new THREE.CanvasTexture(canvas)
-    const material = new THREE.SpriteMaterial({ map: texture })
+    return new THREE.CanvasTexture(canvas)
+  }
+
+  function createTextSprite(text, fontSize, color, yOffset = 0) {
+    const texture = createTextTexture(text, fontSize, color)
+    const material = new THREE.SpriteMaterial({ map: texture, transparent: true })
     const sprite = new THREE.Sprite(material)
     sprite.scale.set(2, 0.5, 1)
     sprite.position.y = yOffset
+    sprite.userData = { text, fontSize, color }
     return sprite
   }
 
+  function updateTextSpriteColor(sprite, color) {
+    if (!sprite || sprite.userData.color === color) return
+
+    const { text, fontSize } = sprite.userData
+    const previousTexture = sprite.material.map
+    sprite.material.map = createTextTexture(text, fontSize, color)
+    sprite.material.needsUpdate = true
+    previousTexture?.dispose()
+    sprite.userData.color = color
+  }
+
+  function readableTextColor(backgroundHex) {
+    const bg = new THREE.Color(backgroundHex)
+    const luminance = channel => {
+      return channel <= 0.03928
+        ? channel / 12.92
+        : Math.pow((channel + 0.055) / 1.055, 2.4)
+    }
+    const relativeLuminance =
+      0.2126 * luminance(bg.r) + 0.7152 * luminance(bg.g) + 0.0722 * luminance(bg.b)
+
+    const darkContrast = (relativeLuminance + 0.05) / 0.064
+    const lightContrast = 1.05 / (relativeLuminance + 0.05)
+
+    return lightContrast > darkContrast ? HOVER_LABEL_COLOR : NORMAL_LABEL_COLOR
+  }
+
+  const labelsBySegment = new Map()
 
   // Add segment labels
   for (const [key, segment] of Object.entries(SEGMENTS)) {
@@ -263,11 +298,12 @@ export function initGameplay() {
     const midAngle = (segment.startAngle + segment.endAngle) / 2
     const midRadius = (radii.inner + radii.outer) / 2
 
-    const label = createTextSprite(segment.label, 16, "#1e293b")
+    const label = createTextSprite(segment.label, 16, NORMAL_LABEL_COLOR)
     label.position.x = Math.cos(midAngle) * midRadius
     label.position.y = Math.sin(midAngle) * midRadius
     label.position.z = 0.1
     scene.add(label)
+    labelsBySegment.set(key, label)
   }
 
   // Raycaster for interaction
@@ -281,6 +317,26 @@ export function initGameplay() {
   const activeSegmentsEl = document.getElementById("active-segments")
 
   let hoveredMesh = null
+
+  function resetSegmentStyle(mesh) {
+    if (!mesh) return
+
+    const key = mesh.userData.key
+    if (activeSegments.has(key)) {
+      mesh.material.color.setHex(mesh.userData.activeColor)
+      updateTextSpriteColor(labelsBySegment.get(key), readableTextColor(mesh.userData.activeColor))
+    } else {
+      mesh.material.color.setHex(mesh.userData.color)
+      updateTextSpriteColor(labelsBySegment.get(key), NORMAL_LABEL_COLOR)
+    }
+  }
+
+  function applyHoverStyle(mesh) {
+    if (!mesh || activeSegments.has(mesh.userData.key)) return
+
+    mesh.material.color.setHex(0x64748b)
+    updateTextSpriteColor(labelsBySegment.get(mesh.userData.key), HOVER_LABEL_COLOR)
+  }
 
   function updateActiveDisplay() {
     if (!activeSegmentsEl) return
@@ -307,15 +363,10 @@ export function initGameplay() {
       const mesh = intersects[0].object
       if (mesh !== hoveredMesh) {
         // Restore previous
-        if (hoveredMesh && !activeSegments.has(hoveredMesh.userData.key)) {
-          hoveredMesh.material.color.setHex(hoveredMesh.userData.color)
-        }
+        resetSegmentStyle(hoveredMesh)
         hoveredMesh = mesh
 
-        // Highlight current (if not active)
-        if (!activeSegments.has(mesh.userData.key)) {
-          mesh.material.color.setHex(0x64748b)
-        }
+        applyHoverStyle(mesh)
 
         // Show tooltip
         tooltipTitle.textContent = mesh.userData.label
@@ -327,9 +378,7 @@ export function initGameplay() {
       tooltip.style.left = `${event.clientX + 15}px`
       tooltip.style.top = `${event.clientY + 15}px`
     } else {
-      if (hoveredMesh && !activeSegments.has(hoveredMesh.userData.key)) {
-        hoveredMesh.material.color.setHex(hoveredMesh.userData.color)
-      }
+      resetSegmentStyle(hoveredMesh)
       hoveredMesh = null
       tooltip.classList.add("hidden")
     }
@@ -351,7 +400,11 @@ export function initGameplay() {
       if (activeSegments.has(key)) {
         // Deselect this segment
         activeSegments.delete(key)
-        mesh.material.color.setHex(mesh.userData.color)
+        if (mesh === hoveredMesh) {
+          applyHoverStyle(mesh)
+        } else {
+          resetSegmentStyle(mesh)
+        }
       } else {
         // Deselect any other segment in the same ring first
         for (const otherKey of activeSegments) {
@@ -361,13 +414,18 @@ export function initGameplay() {
             // Find and reset the mesh color
             const otherMesh = meshes.find(m => m.userData.key === otherKey)
             if (otherMesh) {
-              otherMesh.material.color.setHex(otherSegment.color)
+              if (otherMesh === hoveredMesh) {
+                applyHoverStyle(otherMesh)
+              } else {
+                resetSegmentStyle(otherMesh)
+              }
             }
           }
         }
         // Select this segment
         activeSegments.add(key)
         mesh.material.color.setHex(mesh.userData.activeColor)
+        updateTextSpriteColor(labelsBySegment.get(key), readableTextColor(mesh.userData.activeColor))
       }
 
       updateActiveDisplay()
