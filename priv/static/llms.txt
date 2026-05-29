@@ -1,0 +1,50 @@
+# Wardley.app
+
+Wardley.app is a Phoenix web application for creating and editing Wardley Maps.
+
+## LLM Integration
+
+Repository guide:
+
+- LLM_INTEGRATION.md
+
+Use the REST API for live browser updates. The browser editor loads `GET /api/map` and subscribes to the active map through Phoenix Channels, so edits made through the running Phoenix app are reflected in the open map.
+
+Default local base URL:
+
+- http://localhost:4000
+
+## Auth
+
+Local development API access is currently unauthenticated. Only trusted local callers should use write endpoints. Do not invent credentials. If deployment adds auth, use an out-of-band bearer token and never place secrets in prompts, node text, metadata, URLs, or logs.
+
+## Key Endpoints
+
+- `GET /api/map` - active/default map for the editor.
+- `GET /api/maps` - list maps.
+- `GET /api/maps/:id` - map JSON with nodes and edges.
+- `GET /api/maps/:id/dsl` - compact OWM DSL.
+- `GET /api/maps/:id/svg` - rendered SVG.
+- `POST /api/nodes` - create a node.
+- `PATCH /api/nodes/:id` - update a node.
+- `DELETE /api/nodes/:id` - delete a node.
+- `POST /api/edges` - create a dependency edge.
+- `PATCH /api/edges/:id` - update edge metadata.
+- `DELETE /api/edges/:id` - delete an edge.
+
+## Coordinates
+
+REST uses percentages:
+
+- `x_pct`: evolution, 0 genesis to 100 commodity.
+- `y_pct`: visibility, 0 most visible to 100 least visible.
+
+OWM DSL uses `[visibility, evolution]` from 0.0 to 1.0.
+
+## Map Rules
+
+- Start with user needs.
+- Edges mean `source` depends on `target`.
+- Value chain is dependency structure, not process sequence.
+- Preserve assumptions and uncertainty.
+- Ask before broad destructive edits.

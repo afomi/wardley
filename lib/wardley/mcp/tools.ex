@@ -57,13 +57,18 @@ defmodule Wardley.MCP.Tools do
           type: "object",
           properties: %{
             text: %{type: "string", description: "Component name"},
+            map_id: %{
+              type: "integer",
+              description: "Optional map ID. Omit to use the default map."
+            },
             x_pct: %{
               type: "number",
               description: "Evolution position (0=Genesis, 100=Commodity)"
             },
             y_pct: %{
               type: "number",
-              description: "Value chain position (0=visible/user-facing, 100=invisible/infrastructure)"
+              description:
+                "Value chain position (0=visible/user-facing, 100=invisible/infrastructure)"
             }
           },
           required: ["text", "x_pct", "y_pct"]
@@ -112,7 +117,11 @@ defmodule Wardley.MCP.Tools do
           type: "object",
           properties: %{
             source_id: %{type: "integer", description: "ID of the dependent component"},
-            target_id: %{type: "integer", description: "ID of the component being depended on"}
+            target_id: %{type: "integer", description: "ID of the component being depended on"},
+            map_id: %{
+              type: "integer",
+              description: "Optional map ID. Omit to infer the map from the source component."
+            }
           },
           required: ["source_id", "target_id"]
         }
@@ -205,10 +214,10 @@ defmodule Wardley.MCP.Tools do
   end
 
   def handle("create_node", %{"text" => text, "x_pct" => x, "y_pct" => y} = args) do
-    map = Maps.get_or_create_default_map()
+    map_id = args["map_id"] || Maps.get_or_create_default_map().id
 
     attrs = %{
-      "map_id" => map.id,
+      "map_id" => map_id,
       "text" => text,
       "x_pct" => x,
       "y_pct" => y,
@@ -240,11 +249,11 @@ defmodule Wardley.MCP.Tools do
     end
   end
 
-  def handle("connect_nodes", %{"source_id" => source, "target_id" => target}) do
-    map = Maps.get_or_create_default_map()
+  def handle("connect_nodes", %{"source_id" => source, "target_id" => target} = args) do
+    map_id = args["map_id"] || Maps.get_node!(source).map_id
 
     attrs = %{
-      "map_id" => map.id,
+      "map_id" => map_id,
       "source_id" => source,
       "target_id" => target,
       "metadata" => %{}

@@ -929,7 +929,7 @@ defmodule WardleyWeb.MapComponents do
         <div class="bg-white dark:bg-slate-900 rounded-xl shadow-xl w-full max-w-md overflow-hidden">
           <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
             <h3 class="font-semibold text-slate-900 dark:text-slate-100">
-              Select Map to Overlay
+              Add Layer
             </h3>
             <button
               type="button"
@@ -951,13 +951,96 @@ defmodule WardleyWeb.MapComponents do
               </svg>
             </button>
           </div>
+          <!-- Tabs -->
+          <div class="flex border-b border-slate-200 dark:border-slate-800">
+            <button
+              type="button"
+              id="layer-tab-maps"
+              class="layer-tab flex-1 px-4 py-2 text-sm font-medium text-emerald-700 dark:text-emerald-400 border-b-2 border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20"
+              data-tab="maps"
+            >
+              Saved Maps
+            </button>
+            <button
+              type="button"
+              id="layer-tab-import"
+              class="layer-tab flex-1 px-4 py-2 text-sm font-medium text-slate-500 dark:text-slate-400 border-b-2 border-transparent hover:text-slate-700 dark:hover:text-slate-200"
+              data-tab="import"
+            >
+              Import DSL
+            </button>
+          </div>
+          <!-- Saved maps tab -->
           <div
-            id="map-selector-list"
-            class="p-2 max-h-80 overflow-y-auto"
+            id="layer-panel-maps"
+            class="layer-panel"
           >
-            <p class="text-center text-slate-500 py-4">
-              Loading maps...
-            </p>
+            <div
+              id="map-selector-list"
+              class="p-2 max-h-80 overflow-y-auto"
+            >
+              <p class="text-center text-slate-500 py-4">
+                Loading maps...
+              </p>
+            </div>
+          </div>
+          <!-- Import DSL tab -->
+          <div
+            id="layer-panel-import"
+            class="layer-panel hidden p-4"
+          >
+            <form id="dsl-import-form">
+              <div class="mb-3">
+                <label
+                  for="dsl-import-name"
+                  class="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1"
+                >
+                  Layer name
+                </label>
+                <input
+                  type="text"
+                  id="dsl-import-name"
+                  placeholder="e.g. my-app / package.json"
+                  class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+                />
+              </div>
+              <div class="mb-3">
+                <label
+                  for="dsl-import-text"
+                  class="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1"
+                >
+                  OWM DSL text
+                </label>
+                <textarea
+                  id="dsl-import-text"
+                  rows="10"
+                  placeholder="title My Stack\n\nanchor User [0.95, 0.50]\ncomponent Web App [0.70, 0.60]\ncomponent Postgres [0.40, 0.80]\nUser->Web App\nWeb App->Postgres"
+                  spellcheck="false"
+                  class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm font-mono resize-y"
+                >
+                </textarea>
+              </div>
+              <div
+                id="dsl-import-error"
+                class="hidden mb-3 text-sm text-red-600 dark:text-red-400"
+              >
+              </div>
+              <div class="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onclick="document.getElementById('map-selector-modal').classList.add('hidden')"
+                  class="px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  class="px-4 py-2 text-sm bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors"
+                >
+                  Add Layer
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       </div>

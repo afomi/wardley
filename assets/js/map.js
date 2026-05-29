@@ -242,28 +242,51 @@ export function initMapPage() {
     labelGroup.add(yLabel)
   }
 
+  // Layer visual palette — keyed to canonical LayerSchema ids
+  const LAYER_STYLE = {
+    experience:  { color: 0xf43f5e, ring: 0xfda4af, segments: 32 }, // rose    — circle
+    application: { color: 0x6366f1, ring: 0xa5b4fc, segments: 32 }, // indigo  — circle
+    platform:    { color: 0x0ea5e9, ring: 0x7dd3fc, segments: 6  }, // sky     — hexagon
+    persistence: { color: 0x10b981, ring: 0x6ee7b7, segments: 3  }, // emerald — triangle
+    transport:   { color: 0xec4899, ring: 0xf9a8d4, segments: 5  }, // pink    — pentagon
+    runtime:     { color: 0xf97316, ring: 0xfdba74, segments: 4  }, // orange  — square
+    os:          { color: 0x8b5cf6, ring: 0xc4b5fd, segments: 4  }, // violet  — square
+    firmware:    { color: 0x475569, ring: 0x64748b, segments: 3  }, // slate   — triangle
+    silicon:     { color: 0x1e293b, ring: 0x334155, segments: 3  }, // dark    — triangle
+    unknown:     { color: 0x94a3b8, ring: 0xcbd5e1, segments: 32 }, // gray    — circle (floating)
+    _default:    { color: 0x0f172a, ring: 0xcbd5e1, segments: 32 }, // original style (no metadata)
+  }
+
+  function layerStyleFor(node) {
+    const layer = node.metadata?.layer
+    if (!layer) return LAYER_STYLE._default
+    return LAYER_STYLE[layer] || LAYER_STYLE._unknown
+  }
+
   // Create a node mesh
   function createNodeMesh(node) {
     const { x, y } = worldFromPercent(node.x_pct, node.y_pct)
+    const style = layerStyleFor(node)
 
-    // Node circle
-    const geometry = new THREE.CircleGeometry(2, 32)
-    const material = new THREE.MeshBasicMaterial({ color: 0x0f172a })
+    // Node shape — segments determines shape (3=triangle, 4=square, 5=pentagon, 6=hex, 32=circle)
+    const geometry = new THREE.CircleGeometry(2, style.segments)
+    const material = new THREE.MeshBasicMaterial({ color: style.color })
     const mesh = new THREE.Mesh(geometry, material)
     mesh.position.set(x, y, 1)
 
     // Outline ring
-    const ringGeometry = new THREE.RingGeometry(2, 2.4, 32)
+    const ringGeometry = new THREE.RingGeometry(2, 2.4, style.segments)
     const ringMaterial = new THREE.MeshBasicMaterial({
-      color: 0xcbd5e1,
+      color: style.ring,
       side: THREE.DoubleSide
     })
     const ring = new THREE.Mesh(ringGeometry, ringMaterial)
     ring.position.set(0, 0, 0.1)
     mesh.add(ring)
 
-    // Label sprite
-    const label = createTextSprite(node.text || "Node", 14, "#334155")
+    // Label sprite — color matches layer
+    const cssColor = `#${style.color.toString(16).padStart(6, '0')}`
+    const label = createTextSprite(node.text || "Node", 14, cssColor)
     label.position.set(6, 0, 0)
     label.scale.set(15, 4, 1)
     mesh.add(label)
@@ -276,22 +299,24 @@ export function initMapPage() {
   function updateNodeMesh(mesh, node) {
     const { x, y } = worldFromPercent(node.x_pct, node.y_pct)
     mesh.position.set(x, y, 1)
+    const style = layerStyleFor(node)
 
-    // Update selection state
+    // Update selection state — override ring color when selected
     const ring = mesh.userData.ring
     if (state.selected && state.selected.id === node.id) {
-      ring.material.color.setHex(0x0ea5e9) // sky-500
+      ring.material.color.setHex(0xfbbf24) // amber selection ring
     } else if (interactionState.multiSelected.has(node.id)) {
-      ring.material.color.setHex(0x8b5cf6) // violet-500
+      ring.material.color.setHex(0x8b5cf6) // violet multi-select ring
     } else {
-      ring.material.color.setHex(0xcbd5e1) // slate-300
+      ring.material.color.setHex(style.ring)
     }
 
     // Update label
     if (mesh.userData.label) {
       mesh.remove(mesh.userData.label)
     }
-    const label = createTextSprite(node.text || "Node", 14, "#334155")
+    const cssColor = `#${style.color.toString(16).padStart(6, '0')}`
+    const label = createTextSprite(node.text || "Node", 14, cssColor)
     label.position.set(6, 0, 0)
     label.scale.set(15, 4, 1)
     mesh.add(label)
@@ -1773,6 +1798,87 @@ export function initMapPage() {
     addLayerBtn.addEventListener("click", () => {
       loadMapsList()
       mapSelectorModal.classList.remove("hidden")
+    })
+  }
+
+  // Tab switching in map selector modal
+  const layerTabs = document.querySelectorAll(".layer-tab")
+  const layerPanels = document.querySelectorAll(".layer-panel")
+
+  layerTabs.forEach(tab => {
+    tab.addEventListener("click", () => {
+      const target = tab.dataset.tab
+
+      layerTabs.forEach(t => {
+        const active = t.dataset.tab === target
+        t.classList.toggle("text-emerald-700", active)
+        t.classList.toggle("dark:text-emerald-400", active)
+        t.classList.toggle("border-emerald-500", active)
+        t.classList.toggle("bg-emerald-50", active)
+        t.classList.toggle("dark:bg-emerald-900/20", active)
+        t.classList.toggle("text-slate-500", !active)
+        t.classList.toggle("dark:text-slate-400", !active)
+        t.classList.toggle("border-transparent", !active)
+      })
+
+      layerPanels.forEach(panel => {
+        panel.classList.toggle("hidden", panel.id !== `layer-panel-${target}`)
+      })
+    })
+  })
+
+  // DSL import form
+  const dslImportForm = document.getElementById("dsl-import-form")
+  const dslImportError = document.getElementById("dsl-import-error")
+
+  if (dslImportForm) {
+    dslImportForm.addEventListener("submit", e => {
+      e.preventDefault()
+
+      const nameEl = document.getElementById("dsl-import-name")
+      const textEl = document.getElementById("dsl-import-text")
+      const name = (nameEl?.value || "").trim() || "Imported Map"
+      const text = (textEl?.value || "").trim()
+
+      if (!text) {
+        dslImportError.textContent = "Paste some DSL text first."
+        dslImportError.classList.remove("hidden")
+        return
+      }
+
+      const parsed = dsl.parse(text)
+
+      if (parsed.errors.length > 0 && parsed.components.length === 0) {
+        dslImportError.textContent = `Parse errors: ${parsed.errors.map(e => e.message).join(", ")}`
+        dslImportError.classList.remove("hidden")
+        return
+      }
+
+      dslImportError.classList.add("hidden")
+
+      // Build synthetic node/edge objects — overlay layers are visual only, no DB IDs needed
+      const nodes = parsed.components.map(c => ({
+        id: `import-${c.name}`,
+        text: c.name,
+        x_pct: c.x_pct,
+        y_pct: c.y_pct,
+        metadata: {}
+      }))
+
+      const edges = parsed.edges.map((e, i) => ({
+        id: `import-edge-${i}`,
+        source_id: `import-${e.source}`,
+        target_id: `import-${e.target}`
+      }))
+
+      const syntheticMapId = `import-${Date.now()}`
+      addLayer(syntheticMapId, parsed.title || name, nodes, edges)
+
+      mapSelectorModal.classList.add("hidden")
+
+      // Reset form
+      if (nameEl) nameEl.value = ""
+      if (textEl) textEl.value = ""
     })
   }
 

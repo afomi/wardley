@@ -61,6 +61,21 @@ defmodule Wardley.MCP.ToolsTest do
 
       assert msg =~ "Validation failed"
     end
+
+    test "creates a node on the requested map" do
+      {:ok, map} = Wardley.Repo.insert(%Wardley.Maps.Map{name: "Selected Map"})
+
+      {:ok, json} =
+        Tools.handle("create_node", %{
+          "map_id" => map.id,
+          "text" => "Platform",
+          "x_pct" => 65.0,
+          "y_pct" => 70.0
+        })
+
+      result = Jason.decode!(json)
+      assert result["map_id"] == map.id
+    end
   end
 
   describe "move_node" do
@@ -101,6 +116,18 @@ defmodule Wardley.MCP.ToolsTest do
       result = Jason.decode!(json)
       assert result["source_id"] == n1.id
       assert result["target_id"] == n2.id
+    end
+
+    test "infers the map from the source node" do
+      {:ok, map} = Wardley.Repo.insert(%Wardley.Maps.Map{name: "Dependency Map"})
+      {:ok, n1} = Maps.create_node(%{map_id: map.id, text: "User", x_pct: 50.0, y_pct: 10.0})
+      {:ok, n2} = Maps.create_node(%{map_id: map.id, text: "API", x_pct: 50.0, y_pct: 40.0})
+
+      {:ok, json} =
+        Tools.handle("connect_nodes", %{"source_id" => n1.id, "target_id" => n2.id})
+
+      result = Jason.decode!(json)
+      assert result["map_id"] == map.id
     end
   end
 

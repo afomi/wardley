@@ -68,6 +68,23 @@ defmodule WardleyWeb.MapAPIControllerTest do
 
       assert response["text"] == "Node"
     end
+
+    test "creates a node on the requested map", %{conn: conn} do
+      {:ok, map} = Wardley.Repo.insert(%Wardley.Maps.Map{name: "Selected Map"})
+
+      conn =
+        post(conn, ~p"/api/nodes", %{
+          "map_id" => map.id,
+          "x_pct" => 45.0,
+          "y_pct" => 75.0,
+          "text" => "Selected Component"
+        })
+
+      response = json_response(conn, 200)
+
+      assert response["map_id"] == map.id
+      assert response["text"] == "Selected Component"
+    end
   end
 
   describe "PATCH /api/nodes/:id" do
@@ -167,6 +184,21 @@ defmodule WardleyWeb.MapAPIControllerTest do
 
       assert response["errors"]["source_id"] != nil
     end
+
+    test "infers the edge map from the source node", %{conn: conn} do
+      {:ok, map} = Wardley.Repo.insert(%Wardley.Maps.Map{name: "Dependency Map"})
+
+      {:ok, source} =
+        Maps.create_node(%{map_id: map.id, text: "Source", x_pct: 20.0, y_pct: 80.0})
+
+      {:ok, target} =
+        Maps.create_node(%{map_id: map.id, text: "Target", x_pct: 60.0, y_pct: 40.0})
+
+      conn = post(conn, ~p"/api/edges", %{"source_id" => source.id, "target_id" => target.id})
+      response = json_response(conn, 200)
+
+      assert response["map_id"] == map.id
+    end
   end
 
   describe "PATCH /api/edges/:id" do
@@ -202,6 +234,24 @@ defmodule WardleyWeb.MapAPIControllerTest do
 
       assert response(conn, 204)
       assert_raise Ecto.NoResultsError, fn -> Maps.get_edge!(edge.id) end
+    end
+  end
+
+  describe "GET /api/maps/:id/dsl" do
+    test "returns a map as OWM DSL text", %{conn: conn, map: map} do
+      {:ok, node} =
+        Maps.create_node(%{map_id: map.id, text: "Customer", x_pct: 50.0, y_pct: 10.0})
+
+      {:ok, target} = Maps.create_node(%{map_id: map.id, text: "API", x_pct: 60.0, y_pct: 40.0})
+      {:ok, _edge} = Maps.create_edge(%{map_id: map.id, source_id: node.id, target_id: target.id})
+
+      conn = get(conn, ~p"/api/maps/#{map.id}/dsl")
+      response = response(conn, 200)
+
+      assert get_resp_header(conn, "content-type") == ["text/plain; charset=utf-8"]
+      assert response =~ "title #{map.name}"
+      assert response =~ "component Customer"
+      assert response =~ "Customer->API"
     end
   end
 end

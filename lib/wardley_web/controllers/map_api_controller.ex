@@ -51,11 +51,20 @@ defmodule WardleyWeb.MapAPIController do
     |> send_resp(200, svg)
   end
 
+  def map_dsl(conn, %{"id" => id}) do
+    %{map: map, nodes: nodes, edges: edges} = Maps.get_map_with_data(id)
+    dsl = Wardley.Maps.Dsl.render(map, nodes, edges)
+
+    conn
+    |> put_resp_content_type("text/plain")
+    |> send_resp(200, dsl)
+  end
+
   def create_node(conn, params) do
-    map = Maps.get_or_create_default_map()
+    map_id = params["map_id"] || Maps.get_or_create_default_map().id
 
     attrs = %{
-      "map_id" => map.id,
+      "map_id" => map_id,
       "x_pct" => params["x_pct"],
       "y_pct" => params["y_pct"],
       "text" => params["text"] || "Node",
@@ -91,10 +100,10 @@ defmodule WardleyWeb.MapAPIController do
   end
 
   def create_edge(conn, params) do
-    map = Maps.get_or_create_default_map()
+    map_id = params["map_id"] || edge_map_id(params)
 
     attrs = %{
-      "map_id" => map.id,
+      "map_id" => map_id,
       "source_id" => params["source_id"],
       "target_id" => params["target_id"],
       "metadata" => params["metadata"] || %{}
@@ -249,4 +258,10 @@ defmodule WardleyWeb.MapAPIController do
       end)
     end)
   end
+
+  defp edge_map_id(%{"source_id" => source_id}) when not is_nil(source_id) do
+    Maps.get_node!(source_id).map_id
+  end
+
+  defp edge_map_id(_params), do: Maps.get_or_create_default_map().id
 end
