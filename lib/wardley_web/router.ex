@@ -51,7 +51,10 @@ defmodule WardleyWeb.Router do
     # Map and node/edge operations
     get "/map", MapAPIController, :map
     get "/maps", MapAPIController, :list_maps
+    post "/maps", MapAPIController, :create_map
     get "/maps/:id", MapAPIController, :show_map
+    patch "/maps/:id", MapAPIController, :update_map
+    delete "/maps/:id", MapAPIController, :delete_map
     get "/maps/:id/dsl", MapAPIController, :map_dsl
     get "/maps/:id/svg", MapAPIController, :map_svg
     post "/nodes", MapAPIController, :create_node

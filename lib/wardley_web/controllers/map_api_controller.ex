@@ -29,6 +29,37 @@ defmodule WardleyWeb.MapAPIController do
     })
   end
 
+  def create_map(conn, params) do
+    attrs = %{"name" => params["name"]}
+
+    case Maps.create_map(attrs) do
+      {:ok, map} ->
+        conn |> put_status(:created) |> json(map_json(map))
+
+      {:error, changeset} ->
+        conn |> put_status(:unprocessable_entity) |> json(%{errors: translate_errors(changeset)})
+    end
+  end
+
+  def update_map(conn, %{"id" => id} = params) do
+    map = Maps.get_map!(id)
+    attrs = Map.take(params, ["name"])
+
+    case Maps.update_map(map, attrs) do
+      {:ok, map} ->
+        json(conn, map_json(map))
+
+      {:error, changeset} ->
+        conn |> put_status(:unprocessable_entity) |> json(%{errors: translate_errors(changeset)})
+    end
+  end
+
+  def delete_map(conn, %{"id" => id}) do
+    map = Maps.get_map!(id)
+    {:ok, _} = Maps.delete_map(map)
+    send_resp(conn, :no_content, "")
+  end
+
   @doc """
   Get a specific map with all its data (for loading as a layer).
   """
@@ -217,6 +248,15 @@ defmodule WardleyWeb.MapAPIController do
         |> put_status(:unprocessable_entity)
         |> json(%{errors: translate_errors(changeset)})
     end
+  end
+
+  defp map_json(%Maps.Map{} = m) do
+    %{
+      id: m.id,
+      name: m.name,
+      inserted_at: m.inserted_at,
+      updated_at: m.updated_at
+    }
   end
 
   defp fragment_json(f) do

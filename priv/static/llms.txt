@@ -80,7 +80,10 @@ For the canonical route-derived endpoint table, use `/developers`.
 - `GET /api/me` - validate bearer token and identify the token user.
 - `GET /api/map` - active/default map for the editor.
 - `GET /api/maps` - list maps.
+- `POST /api/maps` - create a map.
 - `GET /api/maps/:id` - map JSON with nodes and edges.
+- `PATCH /api/maps/:id` - rename a map.
+- `DELETE /api/maps/:id` - delete a map.
 - `GET /api/maps/:id/dsl` - compact OWM DSL.
 - `GET /api/maps/:id/svg` - rendered SVG.
 - `POST /api/nodes` - create a node.
@@ -99,6 +102,31 @@ content-type: application/json
 ```
 
 ## Example Mutations
+
+Create a map:
+
+```sh
+curl -X POST http://localhost:4000/api/maps \
+  -H "Authorization: Bearer $WARDLEY_API_TOKEN" \
+  -H "content-type: application/json" \
+  -d '{"name":"EHR Map"}'
+```
+
+Rename a map:
+
+```sh
+curl -X PATCH http://localhost:4000/api/maps/1 \
+  -H "Authorization: Bearer $WARDLEY_API_TOKEN" \
+  -H "content-type: application/json" \
+  -d '{"name":"Renamed Map"}'
+```
+
+Delete a map:
+
+```sh
+curl -X DELETE http://localhost:4000/api/maps/1 \
+  -H "Authorization: Bearer $WARDLEY_API_TOKEN"
+```
 
 Create a node on the active/default map:
 
@@ -166,6 +194,9 @@ In exported DSL, visibility is converted from API `y_pct` as `(100 - y_pct) / 10
 Wardley.Client.list_maps()
 Wardley.Client.get_map(7)
 Wardley.Client.get_dsl(7)
+Wardley.Client.create_map("EHR Map")
+Wardley.Client.update_map(7, %{name: "Renamed Map"})
+Wardley.Client.delete_map(7)
 Wardley.Client.create_node(7, "Customer", x_pct: 75, y_pct: 5)
 Wardley.Client.connect(source_id, target_id)
 Wardley.Client.move_node(node_id, x_pct: 60, y_pct: 20)

@@ -26,15 +26,18 @@ defmodule WardleyWeb.UserLive.LoginTest do
     end
   end
 
-  describe "re-authentication (sudo mode)" do
+  describe "re-authentication" do
     setup %{conn: conn} do
       user = user_fixture()
       %{user: user, conn: log_in_user(conn, user)}
     end
 
-    test "redirects an already logged-in user to their signed-in path", %{conn: conn} do
-      assert {:error, {:redirect, %{to: path}}} = live(conn, ~p"/login")
-      assert path == ~p"/users/settings"
+    test "renders the GitHub login page for an already logged-in user", %{conn: conn} do
+      {:ok, _lv, html} = live(conn, ~p"/login")
+
+      assert html =~ "Log in"
+      assert html =~ "Continue with GitHub"
+      assert html =~ ~p"/auth/github"
     end
   end
 end

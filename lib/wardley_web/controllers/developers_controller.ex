@@ -7,7 +7,10 @@ defmodule WardleyWeb.DevelopersController do
     {"GET", "/api/map"} =>
       {"Active map", "Returns the active/default map loaded by the browser editor."},
     {"GET", "/api/maps"} => {"List maps", "Returns available maps."},
+    {"POST", "/api/maps"} => {"Create map", "Creates a new map."},
     {"GET", "/api/maps/:id"} => {"Show map", "Returns one map with nodes and edges."},
+    {"PATCH", "/api/maps/:id"} => {"Update map", "Renames a map."},
+    {"DELETE", "/api/maps/:id"} => {"Delete map", "Deletes a map and its nodes and edges."},
     {"GET", "/api/maps/:id/dsl"} => {"Map DSL", "Returns compact OWM-style DSL for reasoning."},
     {"GET", "/api/maps/:id/svg"} => {"Map SVG", "Returns a rendered SVG of the map."},
     {"POST", "/api/nodes"} =>

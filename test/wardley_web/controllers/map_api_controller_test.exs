@@ -32,6 +32,52 @@ defmodule WardleyWeb.MapAPIControllerTest do
     end
   end
 
+  describe "POST /api/maps" do
+    test "creates a map with a name", %{conn: conn} do
+      conn = post(conn, ~p"/api/maps", %{"name" => "EHR Map"})
+      response = json_response(conn, 201)
+
+      assert response["name"] == "EHR Map"
+      assert response["id"] != nil
+      assert response["inserted_at"] != nil
+    end
+
+    test "returns error without a name", %{conn: conn} do
+      conn = post(conn, ~p"/api/maps", %{})
+      response = json_response(conn, 422)
+
+      assert response["errors"]["name"] != nil
+    end
+  end
+
+  describe "PATCH /api/maps/:id" do
+    test "renames a map", %{conn: conn, map: map} do
+      conn = patch(conn, ~p"/api/maps/#{map.id}", %{"name" => "Renamed Map"})
+      response = json_response(conn, 200)
+
+      assert response["name"] == "Renamed Map"
+      assert response["id"] == map.id
+    end
+
+    test "returns error for blank name", %{conn: conn, map: map} do
+      conn = patch(conn, ~p"/api/maps/#{map.id}", %{"name" => ""})
+      response = json_response(conn, 422)
+
+      assert response["errors"]["name"] != nil
+    end
+  end
+
+  describe "DELETE /api/maps/:id" do
+    test "deletes the map", %{conn: conn} do
+      {:ok, map} = Maps.create_map(%{name: "Temporary Map"})
+
+      conn = delete(conn, ~p"/api/maps/#{map.id}")
+
+      assert response(conn, 204)
+      assert_raise Ecto.NoResultsError, fn -> Maps.get_map!(map.id) end
+    end
+  end
+
   describe "POST /api/nodes" do
     test "creates a node with valid data", %{conn: conn} do
       params = %{

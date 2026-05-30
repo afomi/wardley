@@ -12,6 +12,7 @@ defmodule Wardley.Maps.Map do
   def changeset(map, attrs) do
     map
     |> cast(attrs, [:name])
+    |> validate_required([:name])
     |> validate_length(:name, max: 200)
   end
 end

@@ -29,6 +29,18 @@ defmodule Wardley.Maps do
     Repo.all(from m in Map, order_by: [desc: m.updated_at])
   end
 
+  def create_map(attrs) do
+    %Map{} |> Map.changeset(attrs) |> Repo.insert()
+  end
+
+  def update_map(%Map{} = map, attrs) do
+    map |> Map.changeset(attrs) |> Repo.update()
+  end
+
+  def delete_map(%Map{} = map) do
+    Repo.delete(map)
+  end
+
   def get_map_with_data(id) do
     map = Repo.get!(Map, id)
     nodes = list_nodes(id)

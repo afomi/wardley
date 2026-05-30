@@ -36,6 +36,7 @@ defmodule WardleyWeb.UserLive.SettingsTest do
         |> follow_redirect(conn, ~p"/login")
 
       assert conn.resp_body =~ "You must re-authenticate to access this page."
+      assert conn.resp_body =~ "Continue with GitHub"
     end
   end
 

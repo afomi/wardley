@@ -34,7 +34,7 @@ defmodule Wardley.Client do
   Set `WARDLEY_API_URL` to override the default `http://localhost:4000`.
   """
 
-  @default_url "http://localhost:4000"
+  @default_url "https://wardley.app"
 
   # --- Maps ---
 
@@ -56,6 +56,18 @@ defmodule Wardley.Client do
 
   def get_svg(map_id) do
     get_text("/api/maps/#{map_id}/svg")
+  end
+
+  def create_map(name) do
+    post("/api/maps", %{name: name})
+  end
+
+  def update_map(map_id, attrs) do
+    patch("/api/maps/#{map_id}", Map.new(attrs))
+  end
+
+  def delete_map(map_id) do
+    delete("/api/maps/#{map_id}")
   end
 
   # --- Nodes ---

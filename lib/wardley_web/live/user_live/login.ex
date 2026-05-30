@@ -25,11 +25,6 @@ defmodule WardleyWeb.UserLive.Login do
   end
 
   @impl true
-  def mount(_params, _session, %{assigns: %{current_scope: %{user: user}}} = socket)
-      when not is_nil(user) do
-    {:ok, redirect(socket, to: ~p"/users/settings")}
-  end
-
   def mount(_params, _session, socket) do
     {:ok, socket}
   end
