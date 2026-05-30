@@ -60,10 +60,10 @@ defmodule WardleyWeb.Layouts do
             />
           </button>
           <a
-            href={~p"/map"}
+            href={~p"/maps"}
             class="px-3 py-1.5 text-sm rounded-md text-slate-700 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800 transition"
           >
-            Example Map
+            Maps
           </a>
           <a
             href={~p"/gameplay"}

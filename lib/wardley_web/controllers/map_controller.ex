@@ -2,6 +2,15 @@ defmodule WardleyWeb.MapController do
   use WardleyWeb, :controller
   alias Wardley.Maps
 
+  def index(conn, _params) do
+    maps = Maps.list_maps()
+
+    conn
+    |> assign(:page_title, "Maps")
+    |> assign(:page_description, "Browse and manage your Wardley Maps.")
+    |> render(:index, maps: maps)
+  end
+
   def show(conn, _params) do
     map = Maps.get_or_create_default_map()
 

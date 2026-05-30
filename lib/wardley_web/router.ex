@@ -27,6 +27,7 @@ defmodule WardleyWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
+    get "/maps", MapController, :index
     get "/map", MapController, :show
     get "/search", SearchPageController, :index
     get "/personas", PersonasPageController, :index
