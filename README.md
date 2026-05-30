@@ -1,18 +1,49 @@
-# Wardley
+# Wardley.app
 
-To start your Phoenix server:
+A tool for creating and exploring Wardley Maps.
 
-* Run `mix setup` to install and setup dependencies
-* Start Phoenix endpoint with `mix phx.server` or inside IEx with `iex -S mix phx.server`
+Maps are strategic diagrams that show how components in a value chain evolve over time.
+The interesting part isn't drawing a single map — it's what happens when you overlay maps from different people, compare how they frame the same domain, and watch where language converges or stays in tension.
 
-Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
+This project is building toward that.
 
-Ready to run in production? Please [check our deployment guides](https://hexdocs.pm/phoenix/deployment.html).
+## What it does today
 
-## Learn more
+- Interactive map editor with drag-and-drop nodes, dependency edges, and evolution stages
+- REST API and MCP server for LLM-assisted mapping
+- Compact DSL compatible with Online Wardley Maps syntax
+- Cross-map search
+- Map fragments for reusable patterns
+- Strategy Cycle (OODA/Gameplay) visualization
+- GitHub login and API tokens for programmatic access
 
-* Official website: https://www.phoenixframework.org/
-* Guides: https://hexdocs.pm/phoenix/overview.html
-* Docs: https://hexdocs.pm/phoenix
-* Forum: https://elixirforum.com/c/phoenix-forum
-* Source: https://github.com/phoenixframework/phoenix
+## Where it's headed
+
+- Overlaying and diffing maps from multiple people on the same domain
+- Community-contributed maps that reveal emergent patterns
+- Virtual maps — latent structures that appear across many maps but were never explicitly drawn
+- Map evolution over time as a first-class concept, not just current-state snapshots
+
+## Running locally
+
+```sh
+mix setup
+mix phx.server
+```
+
+Visit [localhost:4000](http://localhost:4000).
+
+## LLM integration
+
+Wardley.app is designed to work well with LLMs.
+See [llms.txt](https://wardley.app/llms.txt) for the machine-readable spec, or [LLM_INTEGRATION.md](LLM_INTEGRATION.md) for the full guide.
+
+The REST API supports bearer token auth.
+The MCP server (`mix wardley.mcp`) exposes map operations as tool calls.
+A `/wardley` Claude Code skill can map any project from any directory.
+
+## Links
+
+- [wardley.app](https://wardley.app)
+- [Simon Wardley's blog](https://blog.gardeviance.org/)
+- [Wardley Maps book](https://medium.com/wardleymaps) (free)
