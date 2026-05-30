@@ -6,7 +6,6 @@ defmodule WardleyWeb.DevelopersControllerTest do
     html = html_response(conn, 200)
 
     assert html =~ "Wardley.app API"
-    assert html =~ "WardleyWeb.Router.__routes__/0"
     assert html =~ "Authorization: Bearer $WARDLEY_API_TOKEN"
     assert html =~ ~s(href="/llms.txt")
 

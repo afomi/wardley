@@ -17,7 +17,7 @@ async function api(method, url, body) {
 }
 
 // Map boundaries (in world units)
-const MAP_WIDTH = 100
+const MAP_WIDTH = 140
 const MAP_HEIGHT = 100
 const MAP_PADDING = 5
 

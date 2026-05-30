@@ -54,7 +54,7 @@ defmodule WardleyWeb.UserLive.Settings do
               type="submit"
               id="generate-api-token"
               phx-disable-with="Generating..."
-              class="inline-flex h-10 items-center justify-center rounded-md bg-slate-950 px-4 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 dark:bg-slate-100 dark:text-slate-950 dark:hover:bg-white"
+              class="inline-flex h-10 items-center justify-center rounded-md bg-slate-950 px-4 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 dark:bg-slate-100 dark:text-slate-950 dark:hover:bg-white sm:mb-2"
             >
               Generate token
             </button>
