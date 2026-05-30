@@ -1233,14 +1233,8 @@ defmodule WardleyWeb.MapComponents do
 
   def map_overlay(assigns) do
     ~H"""
-    <div class="pointer-events-none absolute left-[400px] top-0 right-[280px] p-3 flex justify-between items-start text-slate-500 text-xs">
-      <div class="pointer-events-auto rounded bg-white/80 dark:bg-slate-900/60 backdrop-blur px-2 py-1 border border-slate-200 dark:border-slate-800 shadow-sm">
-        Y: Visibility (top = more visible)
-      </div>
+    <div class="pointer-events-none absolute left-[400px] top-0 right-[280px] p-3 flex justify-end items-start text-slate-500 text-xs">
       <div class="flex items-center gap-2">
-        <div class="pointer-events-auto rounded bg-white/80 dark:bg-slate-900/60 backdrop-blur px-2 py-1 border border-slate-200 dark:border-slate-800 shadow-sm">
-          X: Evolution (genesis → custom → product → commodity)
-        </div>
         <button
           type="button"
           id="open-coach-btn"

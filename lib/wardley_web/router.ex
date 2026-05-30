@@ -27,8 +27,6 @@ defmodule WardleyWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
-    get "/maps", MapController, :index
-    get "/maps/:id", MapController, :show
     get "/map", MapController, :example
     get "/search", SearchPageController, :index
     get "/personas", PersonasPageController, :index
@@ -116,6 +114,11 @@ defmodule WardleyWeb.Router do
       live "/users/settings", UserLive.Settings, :edit
       live "/users/settings/confirm-email/:token", UserLive.Settings, :confirm_email
     end
+
+    get "/maps", MapController, :index
+    get "/maps/:id", MapController, :show
+    post "/maps/:id/members", MapController, :add_member
+    delete "/maps/:id/members/:user_id", MapController, :remove_member
 
     post "/users/update-password", UserSessionController, :update_password
     post "/api/tokens", ApiTokenController, :create

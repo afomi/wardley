@@ -207,4 +207,91 @@ defmodule Wardley.MapsTest do
       assert edge.metadata == %{}
     end
   end
+
+  describe "map ownership" do
+    setup do
+      user = Wardley.AccountsFixtures.user_fixture()
+      other_user = Wardley.AccountsFixtures.user_fixture(%{email: "other@example.com"})
+      {:ok, owned_map} = Maps.create_map(%{name: "My Map", user_id: user.id})
+      {:ok, other_map} = Maps.create_map(%{name: "Other Map", user_id: other_user.id})
+      {:ok, user: user, other_user: other_user, owned_map: owned_map, other_map: other_map}
+    end
+
+    test "list_maps_for_user returns only owned maps", %{user: user, owned_map: owned_map} do
+      maps = Maps.list_maps_for_user(user.id)
+      map_ids = Enum.map(maps, & &1.id)
+
+      assert owned_map.id in map_ids
+    end
+
+    test "list_maps_for_user includes maps where user is a member", %{
+      user: user,
+      other_map: other_map
+    } do
+      {:ok, _} = Maps.add_member(other_map.id, user.id)
+      maps = Maps.list_maps_for_user(user.id)
+      map_ids = Enum.map(maps, & &1.id)
+
+      assert other_map.id in map_ids
+    end
+
+    test "can_access_map? returns true for owner", %{user: user, owned_map: owned_map} do
+      assert Maps.can_access_map?(owned_map.id, user.id)
+    end
+
+    test "can_access_map? returns false for non-member", %{user: user, other_map: other_map} do
+      refute Maps.can_access_map?(other_map.id, user.id)
+    end
+
+    test "can_access_map? returns true for member", %{user: user, other_map: other_map} do
+      {:ok, _} = Maps.add_member(other_map.id, user.id)
+      assert Maps.can_access_map?(other_map.id, user.id)
+    end
+
+    test "owns_map? returns true for owner", %{user: user, owned_map: owned_map} do
+      assert Maps.owns_map?(owned_map.id, user.id)
+    end
+
+    test "owns_map? returns false for member", %{user: user, other_map: other_map} do
+      {:ok, _} = Maps.add_member(other_map.id, user.id)
+      refute Maps.owns_map?(other_map.id, user.id)
+    end
+  end
+
+  describe "memberships" do
+    setup do
+      user = Wardley.AccountsFixtures.user_fixture(%{email: "owner-m@example.com"})
+      member = Wardley.AccountsFixtures.user_fixture(%{email: "member-m@example.com"})
+      {:ok, map} = Maps.create_map(%{name: "Team Map", user_id: user.id})
+      {:ok, owner: user, member: member, map: map}
+    end
+
+    test "add_member creates a membership", %{map: map, member: member} do
+      assert {:ok, membership} = Maps.add_member(map.id, member.id)
+      assert membership.role == "editor"
+    end
+
+    test "add_member rejects duplicate", %{map: map, member: member} do
+      {:ok, _} = Maps.add_member(map.id, member.id)
+      assert {:error, _changeset} = Maps.add_member(map.id, member.id)
+    end
+
+    test "list_memberships returns members with users", %{map: map, member: member} do
+      {:ok, _} = Maps.add_member(map.id, member.id)
+      memberships = Maps.list_memberships(map.id)
+
+      assert length(memberships) == 1
+      assert hd(memberships).user.email == member.email
+    end
+
+    test "remove_member deletes the membership", %{map: map, member: member} do
+      {:ok, _} = Maps.add_member(map.id, member.id)
+      assert {:ok, _} = Maps.remove_member(map.id, member.id)
+      assert Maps.list_memberships(map.id) == []
+    end
+
+    test "remove_member returns error for non-member", %{map: map, member: member} do
+      assert {:error, :not_found} = Maps.remove_member(map.id, member.id)
+    end
+  end
 end

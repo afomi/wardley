@@ -30,7 +30,13 @@ defmodule WardleyWeb.MapAPIController do
   end
 
   def create_map(conn, params) do
-    attrs = %{"name" => params["name"]}
+    user_id =
+      case conn.assigns do
+        %{current_scope: %{user: %{id: id}}} -> id
+        _ -> nil
+      end
+
+    attrs = %{"name" => params["name"], "user_id" => user_id}
 
     case Maps.create_map(attrs) do
       {:ok, map} ->
@@ -42,22 +48,32 @@ defmodule WardleyWeb.MapAPIController do
   end
 
   def update_map(conn, %{"id" => id} = params) do
-    map = Maps.get_map!(id)
-    attrs = Map.take(params, ["name"])
+    with {:ok, user_id} <- current_user_id(conn),
+         true <- Maps.can_access_map?(id, user_id) do
+      map = Maps.get_map!(id)
+      attrs = Map.take(params, ["name"])
 
-    case Maps.update_map(map, attrs) do
-      {:ok, map} ->
-        json(conn, map_json(map))
+      case Maps.update_map(map, attrs) do
+        {:ok, map} ->
+          json(conn, map_json(map))
 
-      {:error, changeset} ->
-        conn |> put_status(:unprocessable_entity) |> json(%{errors: translate_errors(changeset)})
+        {:error, changeset} ->
+          conn |> put_status(:unprocessable_entity) |> json(%{errors: translate_errors(changeset)})
+      end
+    else
+      _ -> conn |> put_status(:not_found) |> json(%{error: "not_found"})
     end
   end
 
   def delete_map(conn, %{"id" => id}) do
-    map = Maps.get_map!(id)
-    {:ok, _} = Maps.delete_map(map)
-    send_resp(conn, :no_content, "")
+    with {:ok, user_id} <- current_user_id(conn),
+         true <- Maps.owns_map?(id, user_id) do
+      map = Maps.get_map!(id)
+      {:ok, _} = Maps.delete_map(map)
+      send_resp(conn, :no_content, "")
+    else
+      _ -> conn |> put_status(:not_found) |> json(%{error: "not_found"})
+    end
   end
 
   @doc """
@@ -304,4 +320,11 @@ defmodule WardleyWeb.MapAPIController do
   end
 
   defp edge_map_id(_params), do: Maps.get_or_create_default_map().id
+
+  defp current_user_id(conn) do
+    case conn.assigns do
+      %{current_scope: %{user: %{id: id}}} -> {:ok, id}
+      _ -> :error
+    end
+  end
 end

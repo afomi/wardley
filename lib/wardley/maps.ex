@@ -4,9 +4,10 @@ defmodule Wardley.Maps do
   """
   import Ecto.Query
   alias Wardley.Repo
-  alias Wardley.Maps.{Map, Node, Edge, Fragment}
+  alias Wardley.Maps.{Map, MapMembership, Node, Edge, Fragment}
 
   # Maps
+
   def get_or_create_default_map() do
     Repo.transaction(fn ->
       case Repo.one(from m in Map, limit: 1) do
@@ -29,6 +30,40 @@ defmodule Wardley.Maps do
     Repo.all(from m in Map, order_by: [desc: m.updated_at])
   end
 
+  @doc """
+  Lists maps the user owns or is a member of.
+  """
+  def list_maps_for_user(user_id) do
+    Repo.all(
+      from m in Map,
+        left_join: mb in MapMembership,
+        on: mb.map_id == m.id and mb.user_id == ^user_id,
+        where: m.user_id == ^user_id or not is_nil(mb.id),
+        order_by: [desc: m.updated_at],
+        distinct: true
+    )
+  end
+
+  @doc """
+  Returns true if the user owns the map or is a member of it.
+  """
+  def can_access_map?(map_id, user_id) do
+    Repo.exists?(
+      from m in Map,
+        left_join: mb in MapMembership,
+        on: mb.map_id == m.id and mb.user_id == ^user_id,
+        where: m.id == ^map_id,
+        where: m.user_id == ^user_id or not is_nil(mb.id)
+    )
+  end
+
+  @doc """
+  Returns true if the user owns the map.
+  """
+  def owns_map?(map_id, user_id) do
+    Repo.exists?(from m in Map, where: m.id == ^map_id and m.user_id == ^user_id)
+  end
+
   def create_map(attrs) do
     %Map{} |> Map.changeset(attrs) |> Repo.insert()
   end
@@ -46,6 +81,30 @@ defmodule Wardley.Maps do
     nodes = list_nodes(id)
     edges = list_edges(id)
     %{map: map, nodes: nodes, edges: edges}
+  end
+
+  # Memberships
+
+  def list_memberships(map_id) do
+    Repo.all(
+      from mb in MapMembership,
+        where: mb.map_id == ^map_id,
+        preload: [:user],
+        order_by: mb.inserted_at
+    )
+  end
+
+  def add_member(map_id, user_id, role \\ "editor") do
+    %MapMembership{}
+    |> MapMembership.changeset(%{map_id: map_id, user_id: user_id, role: role})
+    |> Repo.insert()
+  end
+
+  def remove_member(map_id, user_id) do
+    case Repo.get_by(MapMembership, map_id: map_id, user_id: user_id) do
+      nil -> {:error, :not_found}
+      membership -> Repo.delete(membership)
+    end
   end
 
   # Nodes

@@ -236,10 +236,7 @@ export function initMapPage() {
       labelGroup.add(sprite)
     }
 
-    // Y axis label
-    const yLabel = createTextSprite("visibility", 12, "#64748b")
-    yLabel.position.set(-10, MAP_HEIGHT / 2, 0)
-    labelGroup.add(yLabel)
+    // Y axis label removed — the chart axis is sufficient
   }
 
   // Layer visual palette — keyed to canonical LayerSchema ids

@@ -60,6 +60,14 @@ defmodule Wardley.Accounts do
   """
   def get_user!(id), do: Repo.get!(User, id)
 
+  @system_email "system@wardley.app"
+
+  def get_system_user do
+    Repo.get_by(User, email: @system_email)
+  end
+
+  def system_email, do: @system_email
+
   ## User registration
 
   @doc """

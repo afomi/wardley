@@ -2,10 +2,21 @@ defmodule WardleyWeb.MapAPIControllerTest do
   use WardleyWeb.ConnCase, async: true
 
   alias Wardley.Maps
+  alias Wardley.Accounts.Scope
 
-  setup do
+  import Wardley.AccountsFixtures
+
+  setup %{conn: conn} do
+    user = user_fixture()
     map = Maps.get_or_create_default_map()
-    {:ok, map: map}
+    Maps.update_map(map, %{user_id: user.id})
+    map = Maps.get_map!(map.id)
+
+    conn =
+      conn
+      |> Plug.Conn.assign(:current_scope, Scope.for_user(user))
+
+    {:ok, conn: conn, map: map, user: user}
   end
 
   describe "GET /api/map" do
@@ -67,9 +78,41 @@ defmodule WardleyWeb.MapAPIControllerTest do
     end
   end
 
+  describe "map ownership" do
+    test "PATCH returns 404 for a map the user does not own", %{conn: conn} do
+      other_user = user_fixture(%{email: "other@example.com"})
+      {:ok, other_map} = Maps.create_map(%{name: "Other Map", user_id: other_user.id})
+
+      conn = patch(conn, ~p"/api/maps/#{other_map.id}", %{"name" => "Hijacked"})
+
+      assert json_response(conn, 404)["error"] == "not_found"
+    end
+
+    test "DELETE returns 404 for a map the user does not own", %{conn: conn} do
+      other_user = user_fixture(%{email: "other2@example.com"})
+      {:ok, other_map} = Maps.create_map(%{name: "Other Map", user_id: other_user.id})
+
+      conn = delete(conn, ~p"/api/maps/#{other_map.id}")
+
+      assert json_response(conn, 404)["error"] == "not_found"
+    end
+
+    test "PATCH allowed for a member", %{conn: conn} do
+      other_user = user_fixture(%{email: "owner3@example.com"})
+      {:ok, shared_map} = Maps.create_map(%{name: "Shared Map", user_id: other_user.id})
+      user = conn.assigns.current_scope.user
+      Maps.add_member(shared_map.id, user.id)
+
+      conn = patch(conn, ~p"/api/maps/#{shared_map.id}", %{"name" => "Updated by member"})
+      response = json_response(conn, 200)
+
+      assert response["name"] == "Updated by member"
+    end
+  end
+
   describe "DELETE /api/maps/:id" do
-    test "deletes the map", %{conn: conn} do
-      {:ok, map} = Maps.create_map(%{name: "Temporary Map"})
+    test "deletes the map", %{conn: conn, user: user} do
+      {:ok, map} = Maps.create_map(%{name: "Temporary Map", user_id: user.id})
 
       conn = delete(conn, ~p"/api/maps/#{map.id}")
 
