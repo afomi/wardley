@@ -28,7 +28,8 @@ defmodule WardleyWeb.Router do
 
     get "/", PageController, :home
     get "/maps", MapController, :index
-    get "/map", MapController, :show
+    get "/maps/:id", MapController, :show
+    get "/map", MapController, :example
     get "/search", SearchPageController, :index
     get "/personas", PersonasPageController, :index
     get "/personas/:id", PersonasPageController, :show

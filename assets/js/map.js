@@ -2089,7 +2089,9 @@ export function initMapPage() {
   drawAxisLabels()
 
   // Load existing data and initialize layer stack
-  api("GET", "/api/map")
+  const dataMapId = container.dataset.mapId
+  const mapUrl = dataMapId ? `/api/maps/${dataMapId}` : "/api/map"
+  api("GET", mapUrl)
     .then(({ map, nodes, edges }) => {
       // Initialize the active layer as first item in layerStack
       const activeLayer = {

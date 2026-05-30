@@ -11,11 +11,21 @@ defmodule WardleyWeb.MapController do
     |> render(:index, maps: maps)
   end
 
-  def show(conn, _params) do
+  def show(conn, %{"id" => id}) do
+    map = Maps.get_map!(id)
+
+    conn
+    |> assign(:page_title, map.name)
+    |> assign(:page_description, "Wardley Map: #{map.name}")
+    |> assign(:og_type, "article")
+    |> render(:map, map: map)
+  end
+
+  def example(conn, _params) do
     map = Maps.get_or_create_default_map()
 
     conn
-    |> assign(:page_title, "Map Editor")
+    |> assign(:page_title, "Example Map")
     |> assign(
       :page_description,
       "Interactive Wardley Map editor. Add components, define dependencies, and visualize your value chain evolution from genesis to commodity."
