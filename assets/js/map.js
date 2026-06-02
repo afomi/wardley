@@ -22,10 +22,12 @@ const MAP_HEIGHT = 100
 const MAP_PADDING = 5
 
 // Convert percentage coordinates to world coordinates
+// y_pct: 0 = most visible (top of map), 100 = least visible (bottom)
+// Three.js y: 0 = bottom, MAP_HEIGHT = top — so invert
 function worldFromPercent(x_pct, y_pct) {
   return {
     x: (x_pct / 100) * MAP_WIDTH,
-    y: (y_pct / 100) * MAP_HEIGHT
+    y: ((100 - y_pct) / 100) * MAP_HEIGHT
   }
 }
 
@@ -33,7 +35,7 @@ function worldFromPercent(x_pct, y_pct) {
 function percentFromWorld(x, y) {
   return {
     x_pct: Math.max(0, Math.min(100, (x / MAP_WIDTH) * 100)),
-    y_pct: Math.max(0, Math.min(100, (y / MAP_HEIGHT) * 100))
+    y_pct: Math.max(0, Math.min(100, ((MAP_HEIGHT - y) / MAP_HEIGHT) * 100))
   }
 }
 
