@@ -3,6 +3,7 @@
     id="wardley-map"
     class="fixed inset-0 top-14 bg-slate-50 dark:bg-slate-950"
     data-map-id={@map.id}
+    data-can-edit={to_string(@can_edit)}
   >
     <div class="h-full w-full flex">
       <.layer_editor_panel />

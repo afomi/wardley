@@ -16,16 +16,23 @@ defmodule WardleyWeb.MapController do
   def show(conn, %{"id" => id}) do
     user = conn.assigns.current_scope.user
 
-    if Maps.can_access_map?(id, user.id) do
+    if Maps.can_view_map?(id, user.id) do
       map = Maps.get_map!(id)
       memberships = Maps.list_memberships(map.id)
       is_owner = map.user_id == user.id
+      # Viewing a public map does not grant edit rights — those stay owner/member-only.
+      can_edit = Maps.can_access_map?(id, user.id)
 
       conn
       |> assign(:page_title, map.name)
       |> assign(:page_description, "Wardley Map: #{map.name}")
       |> assign(:og_type, "article")
-      |> render(:map, map: map, memberships: memberships, is_owner: is_owner)
+      |> render(:map,
+        map: map,
+        memberships: memberships,
+        is_owner: is_owner,
+        can_edit: can_edit
+      )
     else
       conn
       |> put_status(:not_found)
