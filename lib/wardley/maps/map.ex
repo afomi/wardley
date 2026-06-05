@@ -2,7 +2,16 @@ defmodule Wardley.Maps.Map do
   use Ecto.Schema
   import Ecto.Changeset
 
-  @visibilities ~w(public private)
+  # public  — anyone may read; owner/members may write
+  # private — only owner/members may read or write
+  # open    — anyone may read AND write (a shared sandbox; e.g. the default map)
+  @visibilities ~w(public private open)
+
+  @doc "Visibility values that allow anyone to read the map."
+  def readable_by_all, do: ~w(public open)
+
+  @doc "Visibility values that allow anyone to write to the map."
+  def writable_by_all, do: ~w(open)
 
   schema "maps" do
     field :name, :string
