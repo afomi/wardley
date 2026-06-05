@@ -2,7 +2,6 @@ defmodule WardleyWeb.MapAPIControllerTest do
   use WardleyWeb.ConnCase, async: true
 
   alias Wardley.Maps
-  alias Wardley.Accounts.Scope
 
   import Wardley.AccountsFixtures
 
@@ -12,9 +11,9 @@ defmodule WardleyWeb.MapAPIControllerTest do
     Maps.update_map(map, %{user_id: user.id})
     map = Maps.get_map!(map.id)
 
-    conn =
-      conn
-      |> Plug.Conn.assign(:current_scope, Scope.for_user(user))
+    # Authenticate via the browser session, matching how the in-app editor and
+    # the :api pipeline resolve the current user.
+    conn = log_in_user(conn, user)
 
     {:ok, conn: conn, map: map, user: user}
   end
@@ -97,10 +96,9 @@ defmodule WardleyWeb.MapAPIControllerTest do
       assert json_response(conn, 404)["error"] == "not_found"
     end
 
-    test "PATCH allowed for a member", %{conn: conn} do
+    test "PATCH allowed for a member", %{conn: conn, user: user} do
       other_user = user_fixture(%{email: "owner3@example.com"})
       {:ok, shared_map} = Maps.create_map(%{name: "Shared Map", user_id: other_user.id})
-      user = conn.assigns.current_scope.user
       Maps.add_member(shared_map.id, user.id)
 
       conn = patch(conn, ~p"/api/maps/#{shared_map.id}", %{"name" => "Updated by member"})
@@ -156,10 +154,9 @@ defmodule WardleyWeb.MapAPIControllerTest do
       assert response["visibility"] == "private"
     end
 
-    test "a member cannot change visibility via PATCH", %{conn: conn} do
+    test "a member cannot change visibility via PATCH", %{conn: conn, user: user} do
       other = user_fixture(%{email: "vis-api-3@example.com"})
       {:ok, shared} = Maps.create_map(%{name: "Shared", user_id: other.id})
-      user = conn.assigns.current_scope.user
       Maps.add_member(shared.id, user.id)
 
       conn = patch(conn, ~p"/api/maps/#{shared.id}", %{"visibility" => "private"})
@@ -217,8 +214,8 @@ defmodule WardleyWeb.MapAPIControllerTest do
       assert response["text"] == "Node"
     end
 
-    test "creates a node on the requested map", %{conn: conn} do
-      {:ok, map} = Wardley.Repo.insert(%Wardley.Maps.Map{name: "Selected Map"})
+    test "creates a node on the requested map", %{conn: conn, user: user} do
+      {:ok, map} = Maps.create_map(%{name: "Selected Map", user_id: user.id})
 
       conn =
         post(conn, ~p"/api/nodes", %{
@@ -232,6 +229,67 @@ defmodule WardleyWeb.MapAPIControllerTest do
 
       assert response["map_id"] == map.id
       assert response["text"] == "Selected Component"
+    end
+  end
+
+  describe "write permissions on nodes/edges" do
+    setup %{user: _user} do
+      other = user_fixture(%{email: "stranger@example.com"})
+      {:ok, foreign} = Maps.create_map(%{name: "Not Yours", user_id: other.id})
+
+      {:ok, node} =
+        Maps.create_node(%{map_id: foreign.id, text: "Theirs", x_pct: 30.0, y_pct: 30.0})
+
+      {:ok, node2} =
+        Maps.create_node(%{map_id: foreign.id, text: "Theirs2", x_pct: 40.0, y_pct: 40.0})
+
+      {:ok, edge} =
+        Maps.create_edge(%{map_id: foreign.id, source_id: node.id, target_id: node2.id})
+
+      {:ok, foreign: foreign, foreign_node: node, foreign_edge: edge}
+    end
+
+    test "cannot create a node on a map you don't own", %{conn: conn, foreign: foreign} do
+      conn =
+        post(conn, ~p"/api/nodes", %{"map_id" => foreign.id, "x_pct" => 10.0, "y_pct" => 10.0})
+
+      assert json_response(conn, 404)["error"] == "not_found"
+    end
+
+    test "cannot update a node on a map you don't own", %{conn: conn, foreign_node: node} do
+      conn = patch(conn, ~p"/api/nodes/#{node.id}", %{"x_pct" => 99.0})
+
+      assert json_response(conn, 404)["error"] == "not_found"
+    end
+
+    test "cannot delete a node on a map you don't own", %{conn: conn, foreign_node: node} do
+      conn = delete(conn, ~p"/api/nodes/#{node.id}")
+
+      assert json_response(conn, 404)["error"] == "not_found"
+    end
+
+    test "cannot delete an edge on a map you don't own", %{conn: conn, foreign_edge: edge} do
+      conn = delete(conn, ~p"/api/edges/#{edge.id}")
+
+      assert json_response(conn, 404)["error"] == "not_found"
+    end
+
+    test "a member CAN edit nodes on a shared map", %{conn: conn, user: user, foreign: foreign} do
+      {:ok, _} = Maps.add_member(foreign.id, user.id)
+
+      conn =
+        post(conn, ~p"/api/nodes", %{"map_id" => foreign.id, "x_pct" => 10.0, "y_pct" => 10.0})
+
+      assert json_response(conn, 200)["map_id"] == foreign.id
+    end
+
+    test "anyone may edit the shared default map", %{conn: conn} do
+      default = Maps.get_or_create_default_map()
+
+      conn =
+        post(conn, ~p"/api/nodes", %{"map_id" => default.id, "x_pct" => 10.0, "y_pct" => 10.0})
+
+      assert json_response(conn, 200)["map_id"] == default.id
     end
   end
 
@@ -333,8 +391,8 @@ defmodule WardleyWeb.MapAPIControllerTest do
       assert response["errors"]["source_id"] != nil
     end
 
-    test "infers the edge map from the source node", %{conn: conn} do
-      {:ok, map} = Wardley.Repo.insert(%Wardley.Maps.Map{name: "Dependency Map"})
+    test "infers the edge map from the source node", %{conn: conn, user: user} do
+      {:ok, map} = Maps.create_map(%{name: "Dependency Map", user_id: user.id})
 
       {:ok, source} =
         Maps.create_node(%{map_id: map.id, text: "Source", x_pct: 20.0, y_pct: 80.0})

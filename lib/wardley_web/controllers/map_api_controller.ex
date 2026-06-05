@@ -122,77 +122,113 @@ defmodule WardleyWeb.MapAPIController do
   def create_node(conn, params) do
     map_id = params["map_id"] || Maps.get_or_create_default_map().id
 
-    attrs = %{
-      "map_id" => map_id,
-      "x_pct" => params["x_pct"],
-      "y_pct" => params["y_pct"],
-      "text" => params["text"] || "Node",
-      "metadata" => params["metadata"] || %{}
-    }
+    if can_write_map?(conn, map_id) do
+      attrs = %{
+        "map_id" => map_id,
+        "x_pct" => params["x_pct"],
+        "y_pct" => params["y_pct"],
+        "text" => params["text"] || "Node",
+        "metadata" => params["metadata"] || %{}
+      }
 
-    case Maps.create_node(attrs) do
-      {:ok, node} ->
-        json(conn, node_json(node))
+      case Maps.create_node(attrs) do
+        {:ok, node} ->
+          json(conn, node_json(node))
 
-      {:error, changeset} ->
-        conn |> put_status(:unprocessable_entity) |> json(%{errors: translate_errors(changeset)})
+        {:error, changeset} ->
+          conn
+          |> put_status(:unprocessable_entity)
+          |> json(%{errors: translate_errors(changeset)})
+      end
+    else
+      forbid(conn)
     end
   end
 
   def update_node(conn, %{"id" => id} = params) do
     node = Maps.get_node!(id)
-    attrs = Map.take(params, ["x_pct", "y_pct", "text", "metadata"])
 
-    case Maps.update_node(node, attrs) do
-      {:ok, node} ->
-        json(conn, node_json(node))
+    if can_write_map?(conn, node.map_id) do
+      attrs = Map.take(params, ["x_pct", "y_pct", "text", "metadata"])
 
-      {:error, changeset} ->
-        conn |> put_status(:unprocessable_entity) |> json(%{errors: translate_errors(changeset)})
+      case Maps.update_node(node, attrs) do
+        {:ok, node} ->
+          json(conn, node_json(node))
+
+        {:error, changeset} ->
+          conn
+          |> put_status(:unprocessable_entity)
+          |> json(%{errors: translate_errors(changeset)})
+      end
+    else
+      forbid(conn)
     end
   end
 
   def delete_node(conn, %{"id" => id}) do
     node = Maps.get_node!(id)
-    {:ok, _} = Maps.delete_node(node)
-    send_resp(conn, :no_content, "")
+
+    if can_write_map?(conn, node.map_id) do
+      {:ok, _} = Maps.delete_node(node)
+      send_resp(conn, :no_content, "")
+    else
+      forbid(conn)
+    end
   end
 
   def create_edge(conn, params) do
     map_id = params["map_id"] || edge_map_id(params)
 
-    attrs = %{
-      "map_id" => map_id,
-      "source_id" => params["source_id"],
-      "target_id" => params["target_id"],
-      "metadata" => params["metadata"] || %{}
-    }
+    if can_write_map?(conn, map_id) do
+      attrs = %{
+        "map_id" => map_id,
+        "source_id" => params["source_id"],
+        "target_id" => params["target_id"],
+        "metadata" => params["metadata"] || %{}
+      }
 
-    case Maps.create_edge(attrs) do
-      {:ok, edge} ->
-        json(conn, edge_json(edge))
+      case Maps.create_edge(attrs) do
+        {:ok, edge} ->
+          json(conn, edge_json(edge))
 
-      {:error, changeset} ->
-        conn |> put_status(:unprocessable_entity) |> json(%{errors: translate_errors(changeset)})
+        {:error, changeset} ->
+          conn
+          |> put_status(:unprocessable_entity)
+          |> json(%{errors: translate_errors(changeset)})
+      end
+    else
+      forbid(conn)
     end
   end
 
   def delete_edge(conn, %{"id" => id}) do
     edge = Maps.get_edge!(id)
-    {:ok, _} = Maps.delete_edge(edge)
-    send_resp(conn, :no_content, "")
+
+    if can_write_map?(conn, edge.map_id) do
+      {:ok, _} = Maps.delete_edge(edge)
+      send_resp(conn, :no_content, "")
+    else
+      forbid(conn)
+    end
   end
 
   def update_edge(conn, %{"id" => id} = params) do
     edge = Maps.get_edge!(id)
-    attrs = Map.take(params, ["metadata"]) |> Enum.into(%{})
 
-    case Maps.update_edge(edge, attrs) do
-      {:ok, edge} ->
-        json(conn, edge_json(edge))
+    if can_write_map?(conn, edge.map_id) do
+      attrs = Map.take(params, ["metadata"]) |> Enum.into(%{})
 
-      {:error, changeset} ->
-        conn |> put_status(:unprocessable_entity) |> json(%{errors: translate_errors(changeset)})
+      case Maps.update_edge(edge, attrs) do
+        {:ok, edge} ->
+          json(conn, edge_json(edge))
+
+        {:error, changeset} ->
+          conn
+          |> put_status(:unprocessable_entity)
+          |> json(%{errors: translate_errors(changeset)})
+      end
+    else
+      forbid(conn)
     end
   end
 
@@ -369,5 +405,19 @@ defmodule WardleyWeb.MapAPIController do
       {:ok, id} -> id
       :error -> nil
     end
+  end
+
+  # May the caller modify the contents (nodes/edges) of this map?
+  #
+  # The shared default map is an open sandbox — editable by anyone, which keeps
+  # the in-app editor working for anonymous sessions. Any other map requires the
+  # caller to be its owner or a member.
+  defp can_write_map?(conn, map_id) do
+    map_id == Maps.get_or_create_default_map().id or
+      Maps.can_access_map?(map_id, current_user_id_or_nil(conn))
+  end
+
+  defp forbid(conn) do
+    conn |> put_status(:not_found) |> json(%{error: "not_found"})
   end
 end

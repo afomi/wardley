@@ -12,10 +12,17 @@ defmodule Wardley.Maps do
     Repo.transaction(fn ->
       case Repo.one(from m in Map, limit: 1) do
         nil ->
-          %Map{} |> Map.changeset(%{name: "Default Map"}) |> Repo.insert!()
+          %Map{}
+          |> Map.changeset(%{name: "Default Map", visibility: "public"})
+          |> Repo.insert!()
+
+        # The shared default map must stay public so the editor and anonymous
+        # viewing keep working; heal it if it was ever made private.
+        %Map{visibility: "public"} = map ->
+          map
 
         map ->
-          map
+          map |> Map.changeset(%{visibility: "public"}) |> Repo.update!()
       end
     end)
     |> case do

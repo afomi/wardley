@@ -20,6 +20,10 @@ defmodule WardleyWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
+    # Authenticate via the browser session (for the in-app editor) first; a
+    # valid bearer token then overrides current_scope for programmatic callers.
+    plug :fetch_session
+    plug :fetch_current_scope_for_user
     plug WardleyWeb.Plugs.ApiTokenAuth, optional: true
   end
 
