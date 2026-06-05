@@ -19,7 +19,7 @@ defmodule WardleyWeb.MapAPIController do
   List all maps for layer selection.
   """
   def list_maps(conn, _params) do
-    maps = Maps.list_maps()
+    maps = Maps.list_maps(current_user_id_or_nil(conn))
 
     json(conn, %{
       maps:
@@ -36,7 +36,9 @@ defmodule WardleyWeb.MapAPIController do
         _ -> nil
       end
 
-    attrs = %{"name" => params["name"], "user_id" => user_id}
+    attrs =
+      %{"name" => params["name"], "user_id" => user_id}
+      |> maybe_put_visibility(params, user_id)
 
     case Maps.create_map(attrs) do
       {:ok, map} ->
@@ -51,14 +53,20 @@ defmodule WardleyWeb.MapAPIController do
     with {:ok, user_id} <- current_user_id(conn),
          true <- Maps.can_access_map?(id, user_id) do
       map = Maps.get_map!(id)
-      attrs = Map.take(params, ["name"])
+
+      attrs =
+        params
+        |> Map.take(["name"])
+        |> maybe_put_owner_visibility(params, id, user_id)
 
       case Maps.update_map(map, attrs) do
         {:ok, map} ->
           json(conn, map_json(map))
 
         {:error, changeset} ->
-          conn |> put_status(:unprocessable_entity) |> json(%{errors: translate_errors(changeset)})
+          conn
+          |> put_status(:unprocessable_entity)
+          |> json(%{errors: translate_errors(changeset)})
       end
     else
       _ -> conn |> put_status(:not_found) |> json(%{error: "not_found"})
@@ -80,13 +88,17 @@ defmodule WardleyWeb.MapAPIController do
   Get a specific map with all its data (for loading as a layer).
   """
   def show_map(conn, %{"id" => id}) do
-    %{map: map, nodes: nodes, edges: edges} = Maps.get_map_with_data(id)
+    if Maps.can_view_map?(id, current_user_id_or_nil(conn)) do
+      %{map: map, nodes: nodes, edges: edges} = Maps.get_map_with_data(id)
 
-    json(conn, %{
-      map: %{id: map.id, name: map.name},
-      nodes: Enum.map(nodes, &node_json/1),
-      edges: Enum.map(edges, &edge_json/1)
-    })
+      json(conn, %{
+        map: %{id: map.id, name: map.name},
+        nodes: Enum.map(nodes, &node_json/1),
+        edges: Enum.map(edges, &edge_json/1)
+      })
+    else
+      conn |> put_status(:not_found) |> json(%{error: "not_found"})
+    end
   end
 
   def map_svg(conn, %{"id" => id}) do
@@ -270,9 +282,33 @@ defmodule WardleyWeb.MapAPIController do
     %{
       id: m.id,
       name: m.name,
+      visibility: m.visibility,
       inserted_at: m.inserted_at,
       updated_at: m.updated_at
     }
+  end
+
+  # On create, honor a requested visibility only when the map has an owner —
+  # a private map with no owner would be invisible to everyone.
+  defp maybe_put_visibility(attrs, params, user_id) do
+    case {user_id, params["visibility"]} do
+      {nil, _} -> attrs
+      {_id, vis} when is_binary(vis) -> Map.put(attrs, "visibility", vis)
+      _ -> attrs
+    end
+  end
+
+  # On update, only the owner may change visibility.
+  defp maybe_put_owner_visibility(attrs, params, map_id, user_id) do
+    case params["visibility"] do
+      vis when is_binary(vis) ->
+        if Maps.owns_map?(map_id, user_id),
+          do: Map.put(attrs, "visibility", vis),
+          else: attrs
+
+      _ ->
+        attrs
+    end
   end
 
   defp fragment_json(f) do
@@ -325,6 +361,13 @@ defmodule WardleyWeb.MapAPIController do
     case conn.assigns do
       %{current_scope: %{user: %{id: id}}} -> {:ok, id}
       _ -> :error
+    end
+  end
+
+  defp current_user_id_or_nil(conn) do
+    case current_user_id(conn) do
+      {:ok, id} -> id
+      :error -> nil
     end
   end
 end

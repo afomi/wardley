@@ -110,6 +110,65 @@ defmodule WardleyWeb.MapAPIControllerTest do
     end
   end
 
+  describe "map visibility" do
+    test "GET /api/maps omits another user's private map", %{conn: conn} do
+      other = user_fixture(%{email: "vis-api-1@example.com"})
+
+      {:ok, private} =
+        Maps.create_map(%{name: "Hidden", user_id: other.id, visibility: "private"})
+
+      {:ok, public} = Maps.create_map(%{name: "Shown", user_id: other.id})
+
+      ids =
+        get(conn, ~p"/api/maps")
+        |> json_response(200)
+        |> Map.fetch!("maps")
+        |> Enum.map(& &1["id"])
+
+      refute private.id in ids
+      assert public.id in ids
+    end
+
+    test "GET /api/maps/:id returns 404 for another user's private map", %{conn: conn} do
+      other = user_fixture(%{email: "vis-api-2@example.com"})
+
+      {:ok, private} =
+        Maps.create_map(%{name: "Hidden", user_id: other.id, visibility: "private"})
+
+      conn = get(conn, ~p"/api/maps/#{private.id}")
+
+      assert json_response(conn, 404)["error"] == "not_found"
+    end
+
+    test "GET /api/maps/:id returns a private map to its owner", %{conn: conn, user: user} do
+      {:ok, private} = Maps.create_map(%{name: "Mine", user_id: user.id, visibility: "private"})
+
+      conn = get(conn, ~p"/api/maps/#{private.id}")
+      response = json_response(conn, 200)
+
+      assert response["map"]["id"] == private.id
+    end
+
+    test "owner can set a map private via PATCH", %{conn: conn, map: map} do
+      conn = patch(conn, ~p"/api/maps/#{map.id}", %{"visibility" => "private"})
+      response = json_response(conn, 200)
+
+      assert response["visibility"] == "private"
+    end
+
+    test "a member cannot change visibility via PATCH", %{conn: conn} do
+      other = user_fixture(%{email: "vis-api-3@example.com"})
+      {:ok, shared} = Maps.create_map(%{name: "Shared", user_id: other.id})
+      user = conn.assigns.current_scope.user
+      Maps.add_member(shared.id, user.id)
+
+      conn = patch(conn, ~p"/api/maps/#{shared.id}", %{"visibility" => "private"})
+      json_response(conn, 200)
+
+      assert Maps.get_map!(shared.id).visibility == "public"
+    end
+  end
+
   describe "DELETE /api/maps/:id" do
     test "deletes the map", %{conn: conn, user: user} do
       {:ok, map} = Maps.create_map(%{name: "Temporary Map", user_id: user.id})

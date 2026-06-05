@@ -26,8 +26,22 @@ defmodule Wardley.Maps do
 
   def get_map!(id), do: Repo.get!(Map, id)
 
-  def list_maps do
-    Repo.all(from m in Map, order_by: [desc: m.updated_at])
+  @doc """
+  Lists maps visible to the caller.
+
+  Public maps are always included. Private maps are included only when the
+  caller (`user_id`) owns the map or is a member of it. Pass `nil` for an
+  anonymous caller, who sees public maps only.
+  """
+  def list_maps(user_id \\ nil) do
+    Repo.all(
+      from m in Map,
+        left_join: mb in MapMembership,
+        on: mb.map_id == m.id and mb.user_id == ^(user_id || 0),
+        where: m.visibility == "public" or m.user_id == ^(user_id || 0) or not is_nil(mb.id),
+        order_by: [desc: m.updated_at],
+        distinct: true
+    )
   end
 
   @doc """
@@ -54,6 +68,24 @@ defmodule Wardley.Maps do
         on: mb.map_id == m.id and mb.user_id == ^user_id,
         where: m.id == ^map_id,
         where: m.user_id == ^user_id or not is_nil(mb.id)
+    )
+  end
+
+  @doc """
+  Returns true if the caller may *view* the map.
+
+  Public maps are viewable by anyone, including an anonymous caller (`nil`).
+  Private maps are viewable only by the owner or a member. Use this for read
+  paths; use `can_access_map?/2` for edit paths (which never grants access to a
+  non-member just because the map is public).
+  """
+  def can_view_map?(map_id, user_id) do
+    Repo.exists?(
+      from m in Map,
+        left_join: mb in MapMembership,
+        on: mb.map_id == m.id and mb.user_id == ^(user_id || 0),
+        where: m.id == ^map_id,
+        where: m.visibility == "public" or m.user_id == ^(user_id || 0) or not is_nil(mb.id)
     )
   end
 

@@ -258,6 +258,88 @@ defmodule Wardley.MapsTest do
     end
   end
 
+  describe "map visibility" do
+    setup do
+      owner = Wardley.AccountsFixtures.user_fixture(%{email: "vis-owner@example.com"})
+      other = Wardley.AccountsFixtures.user_fixture(%{email: "vis-other@example.com"})
+      {:ok, public_map} = Maps.create_map(%{name: "Public", user_id: owner.id})
+
+      {:ok, private_map} =
+        Maps.create_map(%{name: "Private", user_id: owner.id, visibility: "private"})
+
+      {:ok, owner: owner, other: other, public_map: public_map, private_map: private_map}
+    end
+
+    test "maps default to public", %{public_map: public_map} do
+      assert public_map.visibility == "public"
+    end
+
+    test "list_maps includes public maps for an anonymous caller", %{public_map: public_map} do
+      ids = Maps.list_maps(nil) |> Enum.map(& &1.id)
+      assert public_map.id in ids
+    end
+
+    test "list_maps hides private maps from an anonymous caller", %{private_map: private_map} do
+      ids = Maps.list_maps(nil) |> Enum.map(& &1.id)
+      refute private_map.id in ids
+    end
+
+    test "list_maps hides private maps from a non-member", %{
+      other: other,
+      private_map: private_map
+    } do
+      ids = Maps.list_maps(other.id) |> Enum.map(& &1.id)
+      refute private_map.id in ids
+    end
+
+    test "list_maps shows a private map to its owner", %{owner: owner, private_map: private_map} do
+      ids = Maps.list_maps(owner.id) |> Enum.map(& &1.id)
+      assert private_map.id in ids
+    end
+
+    test "list_maps shows a private map to a member", %{
+      other: other,
+      private_map: private_map
+    } do
+      {:ok, _} = Maps.add_member(private_map.id, other.id)
+      ids = Maps.list_maps(other.id) |> Enum.map(& &1.id)
+      assert private_map.id in ids
+    end
+
+    test "can_view_map? allows anyone to view a public map", %{
+      other: other,
+      public_map: public_map
+    } do
+      assert Maps.can_view_map?(public_map.id, nil)
+      assert Maps.can_view_map?(public_map.id, other.id)
+    end
+
+    test "can_view_map? denies a non-member viewing a private map", %{
+      other: other,
+      private_map: private_map
+    } do
+      refute Maps.can_view_map?(private_map.id, nil)
+      refute Maps.can_view_map?(private_map.id, other.id)
+    end
+
+    test "can_view_map? allows owner and member to view a private map", %{
+      owner: owner,
+      other: other,
+      private_map: private_map
+    } do
+      assert Maps.can_view_map?(private_map.id, owner.id)
+      {:ok, _} = Maps.add_member(private_map.id, other.id)
+      assert Maps.can_view_map?(private_map.id, other.id)
+    end
+
+    test "rejects an invalid visibility value", %{owner: owner} do
+      assert {:error, changeset} =
+               Maps.create_map(%{name: "Bad", user_id: owner.id, visibility: "secret"})
+
+      assert %{visibility: _} = errors_on(changeset)
+    end
+  end
+
   describe "memberships" do
     setup do
       user = Wardley.AccountsFixtures.user_fixture(%{email: "owner-m@example.com"})
