@@ -719,6 +719,27 @@ defmodule WardleyWeb.MapComponents do
         </div>
       </div>
     </aside>
+    <!-- Collapsed-state tab to reopen the code panel -->
+    <button
+      id="show-code-panel"
+      type="button"
+      class="hidden shrink-0 self-start mt-2 -ml-px flex items-center justify-center w-6 py-2 rounded-r border border-l-0 border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-white dark:hover:bg-slate-900 transition-colors"
+      title="Show code panel"
+    >
+      <svg
+        class="w-4 h-4"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M13 5l7 7-7 7M5 5l7 7-7 7"
+        />
+      </svg>
+    </button>
     <!-- Map selector modal -->
     <.map_selector_modal />
     <!-- GitHub settings modal -->

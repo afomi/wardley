@@ -1400,10 +1400,17 @@ export function initMapPage() {
     })
   }
 
+  const showCodeBtn = document.getElementById("show-code-panel")
+  function setCodePanelVisible(visible) {
+    codePanel.classList.toggle("hidden", !visible)
+    if (showCodeBtn) showCodeBtn.classList.toggle("hidden", visible)
+    onResize()
+  }
   if (toggleCodeBtn && codePanel) {
-    toggleCodeBtn.addEventListener("click", () => {
-      codePanel.classList.toggle("hidden")
-    })
+    toggleCodeBtn.addEventListener("click", () => setCodePanelVisible(false))
+  }
+  if (showCodeBtn && codePanel) {
+    showCodeBtn.addEventListener("click", () => setCodePanelVisible(true))
   }
 
   // Window resize

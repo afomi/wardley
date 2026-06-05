@@ -338,6 +338,34 @@ defmodule Wardley.MapsTest do
 
       assert %{visibility: _} = errors_on(changeset)
     end
+
+    test "an open map is readable and writable by anyone", %{owner: owner, other: other} do
+      {:ok, open_map} =
+        Maps.create_map(%{name: "Sandbox", user_id: owner.id, visibility: "open"})
+
+      assert Maps.can_view_map?(open_map.id, nil)
+      assert Maps.can_view_map?(open_map.id, other.id)
+      assert Maps.can_write_map?(open_map.id, nil)
+      assert Maps.can_write_map?(open_map.id, other.id)
+      assert open_map.id in (Maps.list_maps(other.id) |> Enum.map(& &1.id))
+    end
+
+    test "a public map is readable by all but NOT writable by a non-member", %{
+      owner: owner,
+      other: other,
+      public_map: public_map
+    } do
+      assert Maps.can_view_map?(public_map.id, other.id)
+      refute Maps.can_write_map?(public_map.id, other.id)
+      refute Maps.can_write_map?(public_map.id, nil)
+      assert Maps.can_write_map?(public_map.id, owner.id)
+    end
+
+    test "the default map is open (writable by anyone)" do
+      default = Maps.get_or_create_default_map()
+      assert default.visibility == "open"
+      assert Maps.can_write_map?(default.id, nil)
+    end
   end
 
   describe "memberships" do

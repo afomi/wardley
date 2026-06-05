@@ -409,12 +409,11 @@ defmodule WardleyWeb.MapAPIController do
 
   # May the caller modify the contents (nodes/edges) of this map?
   #
-  # The shared default map is an open sandbox — editable by anyone, which keeps
-  # the in-app editor working for anonymous sessions. Any other map requires the
+  # Open maps (e.g. the default sandbox) are writable by anyone, which keeps the
+  # in-app editor working for anonymous sessions. Any other map requires the
   # caller to be its owner or a member.
   defp can_write_map?(conn, map_id) do
-    map_id == Maps.get_or_create_default_map().id or
-      Maps.can_access_map?(map_id, current_user_id_or_nil(conn))
+    Maps.can_write_map?(map_id, current_user_id_or_nil(conn))
   end
 
   defp forbid(conn) do
