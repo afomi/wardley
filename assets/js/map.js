@@ -1047,14 +1047,23 @@ export function initMapPage() {
     }
   })
 
-  // Zoom with mouse wheel
+  // Zoom with mouse wheel / pinch; pan with two-finger trackpad drag.
+  // A pinch gesture fires `wheel` with ctrlKey set; a two-finger drag does not.
   renderer.domElement.addEventListener("wheel", event => {
     event.preventDefault()
 
-    const zoomSpeed = 0.1
-    const delta = event.deltaY > 0 ? 1 + zoomSpeed : 1 - zoomSpeed
+    if (event.ctrlKey) {
+      // Pinch-to-zoom (and ctrl+wheel)
+      const zoomSpeed = 0.1
+      const delta = event.deltaY > 0 ? 1 + zoomSpeed : 1 - zoomSpeed
+      targetCameraZ = Math.max(30, Math.min(200, camera.position.z * delta))
+      return
+    }
 
-    targetCameraZ = Math.max(30, Math.min(200, camera.position.z * delta))
+    // Two-finger trackpad drag pans the camera (scale by zoom level)
+    const scale = camera.position.z / 100
+    camera.position.x += event.deltaX * 0.2 * scale
+    camera.position.y -= event.deltaY * 0.2 * scale
   }, { passive: false })
 
   // Prevent context menu on right-click
