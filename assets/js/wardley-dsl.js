@@ -29,6 +29,10 @@ export function parse(text) {
   // Map component names to their data for edge resolution
   const componentMap = new Map()
 
+  // Evolve statements are resolved after all components are parsed, since the
+  // statement may appear before or after the component it refers to.
+  const evolveStatements = []
+
   for (let i = 0; i < lines.length; i++) {
     const lineNum = i + 1
     const line = lines[i].trim()
@@ -89,9 +93,11 @@ export function parse(text) {
         continue
       }
 
-      // Evolve statement (for future use)
-      if (line.startsWith('evolve ')) {
-        // TODO: implement evolve arrows
+      // Evolve statement: `evolve <Component Name> <evolution 0-1>`
+      const evolveMatch = line.match(/^evolve\s+(.+?)\s+([0-9.]+)\s*$/)
+      if (evolveMatch) {
+        const [, name, evo] = evolveMatch
+        evolveStatements.push({ name: name.trim(), x_pct: parseFloat(evo) * 100 })
         continue
       }
 
@@ -121,7 +127,30 @@ export function parse(text) {
     }
   }
 
+  // Resolve evolve statements onto their components (target evolution as %).
+  for (const { name, x_pct } of evolveStatements) {
+    const component = componentMap.get(name)
+    if (component) {
+      component.evolve_x = x_pct
+    } else {
+      result.errors.push({ message: `Evolve target "${name}" not found` })
+    }
+  }
+
   return result
+}
+
+/**
+ * Read a node's movement target (evolution %) from metadata, or null.
+ * Tolerates numeric or string values.
+ * @param {object} node
+ * @returns {number|null}
+ */
+function evolveTarget(node) {
+  const raw = node?.metadata?.evolve_x ?? node?.evolve_x
+  if (raw === undefined || raw === null || raw === '') return null
+  const n = typeof raw === 'number' ? raw : parseFloat(raw)
+  return Number.isFinite(n) ? n : null
 }
 
 /**
@@ -154,6 +183,20 @@ export function generate(data) {
 
   if (data.edges.length > 0) {
     lines.push('')
+  }
+
+  // Evolve statements (movement targets), emitted after components.
+  const evolveLines = []
+  for (const node of sortedNodes) {
+    const evolveX = evolveTarget(node)
+    if (evolveX !== null) {
+      evolveLines.push(`evolve ${node.text} ${(evolveX / 100).toFixed(2)}`)
+    }
+  }
+
+  if (evolveLines.length > 0) {
+    if (data.edges.length === 0) lines.push('')
+    lines.push(...evolveLines)
   }
 
   // Build a map of node IDs to names for edge generation

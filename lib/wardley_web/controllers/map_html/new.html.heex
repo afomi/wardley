@@ -1,0 +1,43 @@
+<Layouts.app
+  flash={@flash}
+  current_scope={@current_scope}
+>
+  <section class="max-w-lg mx-auto px-4 py-8">
+    <header class="mb-8">
+      <h1 class="text-2xl font-semibold text-slate-900 dark:text-white">
+        New Map
+      </h1>
+    </header>
+
+    <.form
+      :let={f}
+      for={%{}}
+      action={~p"/maps"}
+      as={:map}
+    >
+      <div class="space-y-4">
+        <div>
+          <.input
+            field={f[:name]}
+            type="text"
+            label="Name"
+            placeholder="My Wardley Map"
+            required
+          />
+        </div>
+
+        <div class="flex gap-3 pt-2">
+          <.button type="submit">
+            Create Map
+          </.button>
+          <.link
+            href={~p"/maps"}
+            class="text-sm text-slate-600 dark:text-slate-400 hover:underline self-center"
+          >
+            Cancel
+          </.link>
+        </div>
+      </div>
+    </.form>
+  </section>
+</Layouts.app>

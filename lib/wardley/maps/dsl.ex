@@ -14,9 +14,11 @@ defmodule Wardley.Maps.Dsl do
       "",
       render_nodes(nodes),
       "",
-      render_edges(edges, node_index)
+      render_edges(edges, node_index),
+      render_evolutions(nodes)
     ]
     |> List.flatten()
+    |> Enum.reject(&(&1 == :skip))
     |> Enum.join("\n")
   end
 
@@ -38,6 +40,37 @@ defmodule Wardley.Maps.Dsl do
         _ -> []
       end
     end)
+  end
+
+  defp render_evolutions(nodes) do
+    lines =
+      Enum.flat_map(nodes, fn n ->
+        case evolve_x(n) do
+          nil -> []
+          evo -> ["evolve #{n.text} #{format_coord(Float.round(evo / 100, 2))}"]
+        end
+      end)
+
+    case lines do
+      [] -> :skip
+      lines -> ["" | lines]
+    end
+  end
+
+  # Target evolution as a percentage (0–100), or nil if the node isn't evolving.
+  defp evolve_x(node) do
+    case node.metadata do
+      %{"evolve_x" => v} when is_number(v) -> v
+      %{"evolve_x" => v} when is_binary(v) -> parse_number(v)
+      _ -> nil
+    end
+  end
+
+  defp parse_number(str) do
+    case Float.parse(str) do
+      {f, _} -> f
+      :error -> nil
+    end
   end
 
   defp anchor?(node) do

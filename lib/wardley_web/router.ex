@@ -120,6 +120,8 @@ defmodule WardleyWeb.Router do
     end
 
     get "/maps", MapController, :index
+    get "/maps/new", MapController, :new
+    post "/maps", MapController, :create
     get "/maps/:id", MapController, :show
     post "/maps/:id/members", MapController, :add_member
     delete "/maps/:id/members/:user_id", MapController, :remove_member

@@ -3,13 +3,22 @@
   current_scope={@current_scope}
 >
   <section class="max-w-4xl mx-auto px-4 py-8">
-    <header class="mb-8">
-      <h1 class="text-2xl font-semibold text-slate-900 dark:text-white">
-        Maps
-      </h1>
-      <p class="mt-2 text-slate-600 dark:text-slate-400">
-        Your Wardley Maps.
-      </p>
+    <header class="mb-8 flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-semibold text-slate-900 dark:text-white">
+          Maps
+        </h1>
+        <p class="mt-2 text-slate-600 dark:text-slate-400">
+          Your Wardley Maps.
+        </p>
+      </div>
+      <.link
+        href={~p"/maps/new"}
+        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition"
+      >
+        <.icon name="hero-plus" class="size-4" />
+        New Map
+      </.link>
     </header>
 
     <%= if length(@maps) > 0 do %>
@@ -52,6 +61,13 @@
         <p class="mt-2 text-slate-500">
           Create a map to start visualizing your value chain.
         </p>
+        <.link
+          href={~p"/maps/new"}
+          class="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition"
+        >
+          <.icon name="hero-plus" class="size-4" />
+          New Map
+        </.link>
       </div>
     <% end %>
   </section>

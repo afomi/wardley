@@ -1209,6 +1209,26 @@ defmodule WardleyWeb.MapComponents do
           </div>
         </div>
         <div>
+          <label
+            for="node-evolve"
+            class="block text-xs font-medium text-slate-600 dark:text-slate-300"
+          >
+            Evolve to (target evolution %)
+          </label>
+          <input
+            id="node-evolve"
+            type="number"
+            min="0"
+            max="100"
+            step="0.1"
+            placeholder="leave blank for no movement"
+            class="mt-1 w-full rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 py-1 text-sm"
+          />
+          <p class="mt-1 text-xs text-slate-400 dark:text-slate-500">
+            Draws a movement arrow toward a future evolution stage.
+          </p>
+        </div>
+        <div>
           <div class="flex items-center justify-between">
             <label class="block text-xs font-medium text-slate-600 dark:text-slate-300">
               Metadata

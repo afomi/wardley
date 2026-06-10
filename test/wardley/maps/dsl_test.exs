@@ -63,6 +63,33 @@ defmodule Wardley.Maps.DslTest do
     assert dsl =~ "User->API"
   end
 
+  test "emits an evolve line for a node with an evolve target", %{map: map} do
+    {:ok, _n} =
+      Maps.create_node(%{
+        map_id: map.id,
+        text: "Database",
+        x_pct: 50.0,
+        y_pct: 60.0,
+        metadata: %{"evolve_x" => 80}
+      })
+
+    nodes = Maps.list_nodes(map.id)
+    dsl = Dsl.render(map, nodes, [])
+
+    assert dsl =~ "component Database [0.40, 0.50]"
+    assert dsl =~ "evolve Database 0.80"
+  end
+
+  test "emits no evolve line for a node without an evolve target", %{map: map} do
+    {:ok, _n} =
+      Maps.create_node(%{map_id: map.id, text: "Steady", x_pct: 50.0, y_pct: 50.0})
+
+    nodes = Maps.list_nodes(map.id)
+    dsl = Dsl.render(map, nodes, [])
+
+    refute dsl =~ "evolve"
+  end
+
   test "treats user type as anchor", %{map: map} do
     {:ok, _n} =
       Maps.create_node(%{

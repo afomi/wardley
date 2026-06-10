@@ -128,6 +128,7 @@ export function initMapPage() {
   // Three.js objects
   const nodeGroup = new THREE.Group()
   const edgeGroup = new THREE.Group()
+  const evolveGroup = new THREE.Group() // Evolution movement arrows
   const gridGroup = new THREE.Group()
   const labelGroup = new THREE.Group()
   const layersGroup = new THREE.Group() // Read-only overlay layers
@@ -135,12 +136,14 @@ export function initMapPage() {
   scene.add(gridGroup)
   scene.add(layersGroup) // Layers render behind active map
   scene.add(edgeGroup)
+  scene.add(evolveGroup)
   scene.add(nodeGroup)
   scene.add(labelGroup)
 
   // Node mesh references
   const nodeMeshes = new Map()
   const edgeMeshes = new Map()
+  const evolveMeshes = new Map()
 
   // Layer color palette for overlay layers
   const layerColors = [
@@ -363,6 +366,85 @@ export function initMapPage() {
     line.geometry.attributes.position.needsUpdate = true
   }
 
+  // Read a node's movement target (evolution %, 0-100) from metadata, or null.
+  function evolveTargetPct(node) {
+    const raw = node.metadata?.evolve_x
+    if (raw === undefined || raw === null || raw === "") return null
+    const n = typeof raw === "number" ? raw : parseFloat(raw)
+    if (!Number.isFinite(n)) return null
+    return Math.max(0, Math.min(100, n))
+  }
+
+  // A dashed red arrow from a node to a ghost marker at its target evolution.
+  // Movement in Wardley maps is horizontal, so visibility (y) is unchanged.
+  const EVOLVE_COLOR = 0xdc2626 // red-600
+
+  function createEvolveMesh(node) {
+    const group = new THREE.Group()
+    const material = new THREE.LineDashedMaterial({
+      color: EVOLVE_COLOR,
+      dashSize: 2,
+      gapSize: 1.5,
+      linewidth: 1.5
+    })
+
+    const line = new THREE.Line(new THREE.BufferGeometry(), material)
+    line.userData.role = "shaft"
+    group.add(line)
+
+    // Ghost marker (open ring) at the target position
+    const ring = new THREE.Mesh(
+      new THREE.RingGeometry(1.6, 2.2, 24),
+      new THREE.MeshBasicMaterial({
+        color: EVOLVE_COLOR,
+        transparent: true,
+        opacity: 0.7,
+        side: THREE.DoubleSide
+      })
+    )
+    ring.userData.role = "ghost"
+    group.add(ring)
+
+    // Arrowhead (small triangle) pointing toward the target
+    const head = new THREE.Mesh(
+      new THREE.CircleGeometry(1.4, 3),
+      new THREE.MeshBasicMaterial({ color: EVOLVE_COLOR })
+    )
+    head.userData.role = "head"
+    group.add(head)
+
+    updateEvolveMesh(group, node)
+    return group
+  }
+
+  function updateEvolveMesh(group, node) {
+    const targetPct = evolveTargetPct(node)
+    if (targetPct === null) return
+
+    const start = worldFromPercent(node.x_pct, node.y_pct)
+    const end = worldFromPercent(targetPct, node.y_pct)
+    const z = 0.6
+    const forward = end.x >= start.x ? 1 : -1
+
+    const shaft = group.children.find(c => c.userData.role === "shaft")
+    const ghost = group.children.find(c => c.userData.role === "ghost")
+    const head = group.children.find(c => c.userData.role === "head")
+
+    // Stop the shaft short of the ghost marker so they don't overlap.
+    const headX = end.x - forward * 2.2
+    shaft.geometry.setFromPoints([
+      new THREE.Vector3(start.x, start.y, z),
+      new THREE.Vector3(headX, end.y, z)
+    ])
+    shaft.computeLineDistances()
+
+    ghost.position.set(end.x, end.y, z)
+    head.position.set(headX, end.y, z)
+    head.rotation.z = forward === 1 ? -Math.PI / 2 : Math.PI / 2
+
+    group.visible = true
+  }
+
   // Preview line for link mode
   let previewLine = null
   function showPreviewLine(source) {
@@ -453,6 +535,31 @@ export function initMapPage() {
         edgeMeshes.delete(id)
       }
     }
+
+    // Evolution movement arrows — present only for nodes with an evolve target
+    for (const node of state.nodes) {
+      const hasTarget = evolveTargetPct(node) !== null
+      let mesh = evolveMeshes.get(node.id)
+
+      if (hasTarget && !mesh) {
+        mesh = createEvolveMesh(node)
+        evolveMeshes.set(node.id, mesh)
+        evolveGroup.add(mesh)
+      } else if (hasTarget && mesh) {
+        updateEvolveMesh(mesh, node)
+      } else if (!hasTarget && mesh) {
+        evolveGroup.remove(mesh)
+        evolveMeshes.delete(node.id)
+      }
+    }
+
+    // Remove arrows for deleted nodes
+    for (const [id, mesh] of evolveMeshes) {
+      if (!state.nodes.find(n => n.id === id)) {
+        evolveGroup.remove(mesh)
+        evolveMeshes.delete(id)
+      }
+    }
   }
 
   // Get world position from mouse event
@@ -500,6 +607,7 @@ export function initMapPage() {
   const textEl = document.getElementById("node-text")
   const xEl = document.getElementById("node-x")
   const yEl = document.getElementById("node-y")
+  const evolveEl = document.getElementById("node-evolve")
   const metaFieldsEl = document.getElementById("meta-fields")
   const metaAddBtn = document.getElementById("meta-add")
   const delBtn = document.getElementById("node-delete")
@@ -526,11 +634,16 @@ export function initMapPage() {
     textEl.value = state.selected.text || ""
     xEl.value = Number(state.selected.x_pct).toFixed(1)
     yEl.value = Number(state.selected.y_pct).toFixed(1)
-    // Rebuild metadata fields
+    const md = state.selected.metadata || {}
+    // evolve_x is surfaced as its own control, not a raw metadata row.
+    if (evolveEl) {
+      evolveEl.value =
+        md.evolve_x === undefined || md.evolve_x === null ? "" : Number(md.evolve_x).toFixed(1)
+    }
+    // Rebuild metadata fields (excluding managed keys shown elsewhere)
     if (metaFieldsEl) {
       metaFieldsEl.innerHTML = ""
-      const md = state.selected.metadata || {}
-      const keys = Object.keys(md)
+      const keys = Object.keys(md).filter(k => k !== "evolve_x")
       if (keys.length === 0) {
         metaFieldsEl.appendChild(buildMetaRow())
       } else {
@@ -612,8 +725,13 @@ export function initMapPage() {
           const [kEl, vEl] = row.querySelectorAll("input")
           const key = (kEl?.value || "").trim()
           const value = (vEl?.value || "").trim()
-          if (key !== "") md[key] = parseMaybeJSON(value)
+          if (key !== "" && key !== "evolve_x") md[key] = parseMaybeJSON(value)
         })
+        // Movement target — store as metadata.evolve_x, or omit if blank.
+        const evolveRaw = (evolveEl?.value || "").trim()
+        if (evolveRaw !== "") {
+          md.evolve_x = Math.max(0, Math.min(100, parseFloat(evolveRaw) || 0))
+        }
         payload.metadata = md
       }
       api("PATCH", `/api/nodes/${state.selected.id}`, payload)

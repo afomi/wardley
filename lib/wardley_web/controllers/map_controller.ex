@@ -98,6 +98,30 @@ defmodule WardleyWeb.MapController do
     end
   end
 
+  def new(conn, _params) do
+    conn
+    |> assign(:page_title, "New Map")
+    |> render(:new)
+  end
+
+  def create(conn, %{"map" => map_params}) do
+    user = conn.assigns.current_scope.user
+    attrs = Map.merge(map_params, %{"user_id" => user.id})
+
+    case Maps.create_map(attrs) do
+      {:ok, map} ->
+        conn
+        |> put_flash(:info, "Map created.")
+        |> redirect(to: ~p"/maps/#{map.id}")
+
+      {:error, changeset} ->
+        conn
+        |> assign(:page_title, "New Map")
+        |> assign(:changeset, changeset)
+        |> render(:new)
+    end
+  end
+
   def example(conn, _params) do
     map = Maps.get_or_create_default_map()
 
