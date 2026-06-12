@@ -740,10 +740,6 @@ defmodule WardleyWeb.MapComponents do
         />
       </svg>
     </button>
-    <!-- Map selector modal -->
-    <.map_selector_modal />
-    <!-- GitHub settings modal -->
-    <.github_settings_modal />
     """
   end
 

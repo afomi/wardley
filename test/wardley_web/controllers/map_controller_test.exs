@@ -47,4 +47,16 @@ defmodule WardleyWeb.MapControllerTest do
       assert body =~ ~s(data-can-edit="true")
     end
   end
+
+  describe "GET /maps/:id layout" do
+    test "the add-layer modal renders exactly once", %{conn: conn, user: user} do
+      {:ok, map} = Maps.create_map(%{name: "Layout", user_id: user.id})
+
+      body = conn |> get(~p"/maps/#{map.id}") |> html_response(200)
+
+      # Present, and not duplicated (it used to live inside the panel; moving it
+      # to the top level must not leave a second copy behind).
+      assert length(String.split(body, ~s(id="map-selector-modal"))) == 2
+    end
+  end
 end

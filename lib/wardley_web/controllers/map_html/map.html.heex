@@ -17,5 +17,9 @@
     </div>
     <.map_overlay />
   </div>
+  <!-- Modals live at the top level so their fixed positioning is viewport-relative
+       (a transformed/filtered ancestor would otherwise offset them, notably on mobile). -->
+  <.map_selector_modal />
+  <.github_settings_modal />
   <.coaching_modal />
 </Layouts.app>

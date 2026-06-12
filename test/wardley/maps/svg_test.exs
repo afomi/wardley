@@ -61,4 +61,34 @@ defmodule Wardley.Maps.SvgTest do
 
     assert svg =~ "<title>#{map.name}</title>"
   end
+
+  test "renders a movement arrow for a node with an evolve target", %{map: map} do
+    {:ok, _n} =
+      Maps.create_node(%{
+        map_id: map.id,
+        text: "Database",
+        x_pct: 50.0,
+        y_pct: 60.0,
+        metadata: %{"evolve_x" => 80}
+      })
+
+    nodes = Maps.list_nodes(map.id)
+    svg = Svg.render(map, nodes, [])
+
+    assert svg =~ ~s(class="evolve-line")
+    assert svg =~ ~s(class="evolve-ghost")
+    assert svg =~ ~s|marker-end="url(#evolve-arrow)"|
+    assert svg =~ "<marker"
+  end
+
+  test "renders no movement arrow for a node without an evolve target", %{map: map} do
+    {:ok, _n} = Maps.create_node(%{map_id: map.id, text: "Steady", x_pct: 50.0, y_pct: 50.0})
+
+    nodes = Maps.list_nodes(map.id)
+    svg = Svg.render(map, nodes, [])
+
+    # The CSS class definitions always exist in <style>; assert no element uses them.
+    refute svg =~ ~s(class="evolve-line")
+    refute svg =~ ~s(class="evolve-ghost")
+  end
 end
