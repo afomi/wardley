@@ -1372,4 +1372,24 @@ defmodule WardleyWeb.MapComponents do
     </div>
     """
   end
+
+  @doc """
+  Renders a circular avatar with email badge for a user.
+  The avatar shows the first letter of the email address.
+  """
+  attr :email, :string, required: true
+  attr :class, :string, default: ""
+
+  def author_badge(assigns) do
+    ~H"""
+    <span class={"inline-flex items-center gap-2 #{@class}"}>
+      <span class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600 dark:bg-blue-500 text-white text-xs font-semibold flex items-center justify-center uppercase select-none">
+        {String.at(@email, 0)}
+      </span>
+      <span class="text-sm text-slate-600 dark:text-slate-400 truncate">
+        {@email}
+      </span>
+    </span>
+    """
+  end
 end

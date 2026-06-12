@@ -42,6 +42,11 @@
                   <p class="mt-1 text-sm text-slate-500">
                     Updated {Calendar.strftime(map.updated_at, "%b %d, %Y")}
                   </p>
+                  <.author_badge
+                    :if={map.user}
+                    email={map.user.email}
+                    class="mt-2"
+                  />
                 </div>
               </div>
             </div>

@@ -84,9 +84,10 @@ defmodule WardleyWeb.Layouts do
             Developers
           </a>
           <%= if @current_scope && @current_scope.user do %>
-            <span class="hidden md:inline px-3 py-1.5 text-sm text-slate-500 dark:text-slate-400">
-              {@current_scope.user.email}
-            </span>
+            <WardleyWeb.MapComponents.author_badge
+              email={@current_scope.user.email}
+              class="hidden md:inline-flex px-2"
+            />
             <a
               href={~p"/users/settings"}
               class="px-3 py-1.5 text-sm rounded-md text-slate-700 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800 transition"

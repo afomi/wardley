@@ -63,7 +63,8 @@ defmodule Wardley.Maps do
         on: mb.map_id == m.id and mb.user_id == ^user_id,
         where: m.user_id == ^user_id or not is_nil(mb.id),
         order_by: [desc: m.updated_at],
-        distinct: true
+        distinct: true,
+        preload: [:user]
     )
   end
 
