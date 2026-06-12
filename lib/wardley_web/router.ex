@@ -62,11 +62,17 @@ defmodule WardleyWeb.Router do
     get "/maps/:id/dsl", MapAPIController, :map_dsl
     get "/maps/:id/svg", MapAPIController, :map_svg
     post "/nodes", MapAPIController, :create_node
+    get "/nodes/:id", MapAPIController, :show_node
     patch "/nodes/:id", MapAPIController, :update_node
     delete "/nodes/:id", MapAPIController, :delete_node
+    put "/nodes/:id/metadata/:key", MapAPIController, :put_node_metadata_key
+    delete "/nodes/:id/metadata/:key", MapAPIController, :delete_node_metadata_key
     post "/edges", MapAPIController, :create_edge
+    get "/edges/:id", MapAPIController, :show_edge
     patch "/edges/:id", MapAPIController, :update_edge
     delete "/edges/:id", MapAPIController, :delete_edge
+    put "/edges/:id/metadata/:key", MapAPIController, :put_edge_metadata_key
+    delete "/edges/:id/metadata/:key", MapAPIController, :delete_edge_metadata_key
 
     # Fragments
     get "/fragments", MapAPIController, :list_fragments

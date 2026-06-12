@@ -107,6 +107,18 @@ defmodule Wardley.Maps do
   Open maps are writable by anyone, including an anonymous caller (`nil`). All
   other maps require the caller to be the owner or a member.
   """
+  def can_read_map?(map_id, user_id) do
+    readable = Map.readable_by_all()
+
+    Repo.exists?(
+      from m in Map,
+        left_join: mb in MapMembership,
+        on: mb.map_id == m.id and mb.user_id == ^(user_id || 0),
+        where: m.id == ^map_id,
+        where: m.visibility in ^readable or m.user_id == ^(user_id || 0) or not is_nil(mb.id)
+    )
+  end
+
   def can_write_map?(map_id, user_id) do
     writable = Map.writable_by_all()
 

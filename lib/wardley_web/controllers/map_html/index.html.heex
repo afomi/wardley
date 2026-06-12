@@ -2,7 +2,7 @@
   flash={@flash}
   current_scope={@current_scope}
 >
-  <section class="max-w-4xl mx-auto px-4 py-8">
+  <section class="max-w-5xl mx-auto px-4 py-8">
     <header class="mb-8 flex items-center justify-between">
       <div>
         <h1 class="text-2xl font-semibold text-slate-900 dark:text-white">
@@ -21,37 +21,75 @@
     </header>
 
     <%= if length(@maps) > 0 do %>
-      <div class="grid gap-4 sm:grid-cols-2">
-        <%= for map <- @maps do %>
-          <a
-            href={~p"/maps/#{map.id}"}
-            class="block p-5 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition"
-          >
-            <div class="flex items-start justify-between gap-3">
-              <div class="flex items-center gap-3">
-                <span class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
-                  <.icon
-                    name="hero-map"
-                    class="size-5 text-blue-600 dark:text-blue-400"
-                  />
+      <div class="rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <table
+          id="maps-table"
+          class="w-full text-sm"
+        >
+          <thead class="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+            <tr>
+              <th
+                data-col="name"
+                class="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-400 cursor-pointer select-none hover:text-slate-900 dark:hover:text-white"
+              >
+                <span class="inline-flex items-center gap-1">
+                  Name <span class="sort-indicator text-slate-400">↕</span>
                 </span>
-                <div>
-                  <h2 class="font-medium text-slate-900 dark:text-white">
-                    {map.name}
-                  </h2>
-                  <p class="mt-1 text-sm text-slate-500">
-                    Updated {Calendar.strftime(map.updated_at, "%b %d, %Y")}
-                  </p>
-                  <.author_badge
-                    :if={map.user}
-                    email={map.user.email}
-                    class="mt-2"
-                  />
-                </div>
-              </div>
-            </div>
-          </a>
-        <% end %>
+              </th>
+              <th
+                data-col="owner"
+                class="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-400 cursor-pointer select-none hover:text-slate-900 dark:hover:text-white"
+              >
+                <span class="inline-flex items-center gap-1">
+                  Owner <span class="sort-indicator text-slate-400">↕</span>
+                </span>
+              </th>
+              <th
+                data-col="updated"
+                class="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-400 cursor-pointer select-none hover:text-slate-900 dark:hover:text-white"
+              >
+                <span class="inline-flex items-center gap-1">
+                  Last Updated <span class="sort-indicator text-slate-400">↕</span>
+                </span>
+              </th>
+            </tr>
+          </thead>
+          <tbody id="maps-tbody">
+            <%= for map <- @maps do %>
+              <tr
+                data-name={String.downcase(map.name)}
+                data-owner={if map.user, do: String.downcase(map.user.email), else: ""}
+                data-updated={DateTime.to_unix(map.updated_at)}
+                class="border-b border-slate-100 dark:border-slate-700/50 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition cursor-pointer"
+                onclick={"window.location='/maps/#{map.id}'"}
+              >
+                <td class="px-4 py-3">
+                  <div class="flex items-center gap-3">
+                    <span class="flex-shrink-0 w-7 h-7 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
+                      <.icon
+                        name="hero-map"
+                        class="size-4 text-blue-600 dark:text-blue-400"
+                      />
+                    </span>
+                    <span class="font-medium text-slate-900 dark:text-white">
+                      {map.name}
+                    </span>
+                  </div>
+                </td>
+                <td class="px-4 py-3 text-slate-500 dark:text-slate-400">
+                  <%= if map.user do %>
+                    <.author_badge email={map.user.email} />
+                  <% else %>
+                    <span class="text-slate-400 dark:text-slate-600">—</span>
+                  <% end %>
+                </td>
+                <td class="px-4 py-3 text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                  {Calendar.strftime(map.updated_at, "%b %d, %Y")}
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
       </div>
     <% else %>
       <div class="text-center py-12">
@@ -74,4 +112,70 @@
       </div>
     <% end %>
   </section>
+
+  <script>
+    (function () {
+      const table = document.getElementById("maps-table")
+      if (!table) return
+
+      const tbody = document.getElementById("maps-tbody")
+      const headers = table.querySelectorAll("th[data-col]")
+
+      // col -> "asc" | "desc" | null
+      let sortState = { col: "updated", dir: "desc" }
+
+      function getVal(row, col) {
+        if (col === "updated") return parseInt(row.dataset.updated, 10)
+        return row.dataset[col] || ""
+      }
+
+      function sortRows() {
+        const rows = Array.from(tbody.querySelectorAll("tr"))
+        const { col, dir } = sortState
+
+        rows.sort((a, b) => {
+          const av = getVal(a, col)
+          const bv = getVal(b, col)
+          if (av < bv) return dir === "asc" ? -1 : 1
+          if (av > bv) return dir === "asc" ? 1 : -1
+          return 0
+        })
+
+        rows.forEach(r => tbody.appendChild(r))
+      }
+
+      function updateIndicators() {
+        headers.forEach(th => {
+          const ind = th.querySelector(".sort-indicator")
+          if (th.dataset.col === sortState.col) {
+            ind.textContent = sortState.dir === "asc" ? "↑" : "↓"
+            ind.classList.remove("text-slate-400")
+            ind.classList.add("text-blue-500")
+          } else {
+            ind.textContent = "↕"
+            ind.classList.add("text-slate-400")
+            ind.classList.remove("text-blue-500")
+          }
+        })
+      }
+
+      headers.forEach(th => {
+        th.addEventListener("click", () => {
+          const col = th.dataset.col
+          if (sortState.col === col) {
+            sortState.dir = sortState.dir === "asc" ? "desc" : "asc"
+          } else {
+            sortState.col = col
+            sortState.dir = col === "updated" ? "desc" : "asc"
+          }
+          sortRows()
+          updateIndicators()
+        })
+      })
+
+      // Apply default sort on load
+      sortRows()
+      updateIndicators()
+    })()
+  </script>
 </Layouts.app>

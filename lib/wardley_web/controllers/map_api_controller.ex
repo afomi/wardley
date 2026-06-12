@@ -145,11 +145,29 @@ defmodule WardleyWeb.MapAPIController do
     end
   end
 
+  def show_node(conn, %{"id" => id}) do
+    node = Maps.get_node!(id)
+
+    if can_read_map?(conn, node.map_id) do
+      json(conn, node_json(node))
+    else
+      forbid(conn)
+    end
+  end
+
   def update_node(conn, %{"id" => id} = params) do
     node = Maps.get_node!(id)
 
     if can_write_map?(conn, node.map_id) do
-      attrs = Map.take(params, ["x_pct", "y_pct", "text", "metadata"])
+      attrs = Map.take(params, ["x_pct", "y_pct", "text"])
+
+      # Merge metadata rather than replace — only keys present in the request are updated
+      attrs = case params do
+        %{"metadata" => incoming} when is_map(incoming) ->
+          Map.put(attrs, "metadata", Map.merge(node.metadata || %{}, incoming))
+        _ ->
+          attrs
+      end
 
       case Maps.update_node(node, attrs) do
         {:ok, node} ->
@@ -159,6 +177,39 @@ defmodule WardleyWeb.MapAPIController do
           conn
           |> put_status(:unprocessable_entity)
           |> json(%{errors: translate_errors(changeset)})
+      end
+    else
+      forbid(conn)
+    end
+  end
+
+  def put_node_metadata_key(conn, %{"id" => id, "key" => key} = params) do
+    node = Maps.get_node!(id)
+
+    if can_write_map?(conn, node.map_id) do
+      value = params["value"]
+      metadata = Map.put(node.metadata || %{}, key, value)
+
+      case Maps.update_node(node, %{"metadata" => metadata}) do
+        {:ok, node} -> json(conn, node_json(node))
+        {:error, changeset} ->
+          conn |> put_status(:unprocessable_entity) |> json(%{errors: translate_errors(changeset)})
+      end
+    else
+      forbid(conn)
+    end
+  end
+
+  def delete_node_metadata_key(conn, %{"id" => id, "key" => key}) do
+    node = Maps.get_node!(id)
+
+    if can_write_map?(conn, node.map_id) do
+      metadata = Map.delete(node.metadata || %{}, key)
+
+      case Maps.update_node(node, %{"metadata" => metadata}) do
+        {:ok, node} -> json(conn, node_json(node))
+        {:error, changeset} ->
+          conn |> put_status(:unprocessable_entity) |> json(%{errors: translate_errors(changeset)})
       end
     else
       forbid(conn)
@@ -212,11 +263,26 @@ defmodule WardleyWeb.MapAPIController do
     end
   end
 
+  def show_edge(conn, %{"id" => id}) do
+    edge = Maps.get_edge!(id)
+
+    if can_read_map?(conn, edge.map_id) do
+      json(conn, edge_json(edge))
+    else
+      forbid(conn)
+    end
+  end
+
   def update_edge(conn, %{"id" => id} = params) do
     edge = Maps.get_edge!(id)
 
     if can_write_map?(conn, edge.map_id) do
-      attrs = Map.take(params, ["metadata"]) |> Enum.into(%{})
+      attrs = case params do
+        %{"metadata" => incoming} when is_map(incoming) ->
+          %{"metadata" => Map.merge(edge.metadata || %{}, incoming)}
+        _ ->
+          %{}
+      end
 
       case Maps.update_edge(edge, attrs) do
         {:ok, edge} ->
@@ -226,6 +292,39 @@ defmodule WardleyWeb.MapAPIController do
           conn
           |> put_status(:unprocessable_entity)
           |> json(%{errors: translate_errors(changeset)})
+      end
+    else
+      forbid(conn)
+    end
+  end
+
+  def put_edge_metadata_key(conn, %{"id" => id, "key" => key} = params) do
+    edge = Maps.get_edge!(id)
+
+    if can_write_map?(conn, edge.map_id) do
+      value = params["value"]
+      metadata = Map.put(edge.metadata || %{}, key, value)
+
+      case Maps.update_edge(edge, %{"metadata" => metadata}) do
+        {:ok, edge} -> json(conn, edge_json(edge))
+        {:error, changeset} ->
+          conn |> put_status(:unprocessable_entity) |> json(%{errors: translate_errors(changeset)})
+      end
+    else
+      forbid(conn)
+    end
+  end
+
+  def delete_edge_metadata_key(conn, %{"id" => id, "key" => key}) do
+    edge = Maps.get_edge!(id)
+
+    if can_write_map?(conn, edge.map_id) do
+      metadata = Map.delete(edge.metadata || %{}, key)
+
+      case Maps.update_edge(edge, %{"metadata" => metadata}) do
+        {:ok, edge} -> json(conn, edge_json(edge))
+        {:error, changeset} ->
+          conn |> put_status(:unprocessable_entity) |> json(%{errors: translate_errors(changeset)})
       end
     else
       forbid(conn)
@@ -412,6 +511,10 @@ defmodule WardleyWeb.MapAPIController do
   # Open maps (e.g. the default sandbox) are writable by anyone, which keeps the
   # in-app editor working for anonymous sessions. Any other map requires the
   # caller to be its owner or a member.
+  defp can_read_map?(conn, map_id) do
+    Maps.can_read_map?(map_id, current_user_id_or_nil(conn))
+  end
+
   defp can_write_map?(conn, map_id) do
     Maps.can_write_map?(map_id, current_user_id_or_nil(conn))
   end

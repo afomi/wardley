@@ -74,6 +74,38 @@ export function initMapPage() {
   // The first layer (index 0) is always the active/editable layer
   const layerStack = []
 
+  // Shared socket for PubSub — set once the active map channel connects
+  let sharedSocket = null
+
+  // Persist overlay layer map IDs to localStorage so they survive refresh.
+  // Only real map IDs (numbers) are persisted; synthetic DSL-paste layers are not.
+  function persistedLayersKey(activeMapId) {
+    return `wardley:layers:${activeMapId}`
+  }
+
+  function savePersistedLayers(activeMapId) {
+    const ids = layerStack
+      .slice(1) // skip active layer at index 0
+      .filter(l => typeof l.mapId === "number")
+      .map(l => l.mapId)
+    localStorage.setItem(persistedLayersKey(activeMapId), JSON.stringify(ids))
+  }
+
+  async function restorePersistedLayers(activeMapId) {
+    const raw = localStorage.getItem(persistedLayersKey(activeMapId))
+    if (!raw) return
+    let ids
+    try { ids = JSON.parse(raw) } catch { return }
+    for (const mapId of ids) {
+      try {
+        const data = await api("GET", `/api/maps/${mapId}`)
+        addLayer(mapId, data.map.name, data.nodes, data.edges)
+      } catch (err) {
+        console.error(`Failed to restore layer ${mapId}:`, err)
+      }
+    }
+  }
+
   // Interaction state (not part of layer data)
   const interactionState = {
     linkMode: false,
@@ -1585,6 +1617,21 @@ export function initMapPage() {
     layerStack.push(layer)
     renderLayerToThreeJS(layer)
     renderLayerStackUI()
+    if (typeof mapId === "number") savePersistedLayers(layerStack[0]?.mapId)
+
+    if (sharedSocket) {
+      const ch = sharedSocket.channel(`map:${mapId}`)
+      ch.on("map_updated", ({ nodes: newNodes, edges: newEdges }) => {
+        layer.nodes = newNodes
+        layer.edges = newEdges
+        layer.dslCode = generateDslCode(layer.name, newNodes, newEdges)
+        renderLayerToThreeJS(layer)
+        renderLayerStackUI()
+      })
+      ch.join()
+      layer.channel = ch
+    }
+
     return color
   }
 
@@ -1593,6 +1640,8 @@ export function initMapPage() {
     if (index < 1 || index >= layerStack.length) return // Can't remove active layer (index 0)
 
     const layer = layerStack[index]
+    layer.channel?.leave()
+
     const group = layerGroups.get(layer.mapId)
     if (group) {
       layersGroup.remove(group)
@@ -1601,6 +1650,7 @@ export function initMapPage() {
 
     layerStack.splice(index, 1)
     renderLayerStackUI()
+    savePersistedLayers(layerStack[0]?.mapId)
   }
 
   // Promote a layer to be the active layer (swap with index 0)
@@ -2246,9 +2296,9 @@ export function initMapPage() {
 
       // Connect to channel for real-time updates
       if (map?.id) {
-        const socket = new Socket("/socket")
-        socket.connect()
-        const channel = socket.channel(`map:${map.id}`)
+        sharedSocket = new Socket("/socket")
+        sharedSocket.connect()
+        const channel = sharedSocket.channel(`map:${map.id}`)
         channel.on("map_updated", ({ nodes: newNodes, edges: newEdges }) => {
           state.nodes = newNodes
           state.edges = newEdges
@@ -2257,6 +2307,8 @@ export function initMapPage() {
         })
         channel.join()
       }
+
+      if (map?.id) restorePersistedLayers(map.id)
     })
     .catch(console.error)
 
