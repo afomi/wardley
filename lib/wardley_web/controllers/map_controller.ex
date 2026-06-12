@@ -124,6 +124,8 @@ defmodule WardleyWeb.MapController do
 
   def example(conn, _params) do
     map = Maps.get_or_create_default_map()
+    user_id = conn.assigns[:current_scope] && conn.assigns.current_scope.user.id
+    can_edit = Maps.can_write_map?(map.id, user_id)
 
     conn
     |> assign(:page_title, "Example Map")
@@ -132,6 +134,6 @@ defmodule WardleyWeb.MapController do
       "Interactive Wardley Map editor. Add components, define dependencies, and visualize your value chain evolution from genesis to commodity."
     )
     |> assign(:og_type, "article")
-    |> render(:map, map: map)
+    |> render(:map, map: map, can_edit: can_edit)
   end
 end
