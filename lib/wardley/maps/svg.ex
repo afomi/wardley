@@ -29,6 +29,7 @@ defmodule Wardley.Maps.Svg do
       svg_open(map.name),
       render_axes(),
       render_edges(edges, node_index),
+      render_evolutions(nodes),
       render_nodes(nodes),
       svg_close()
     ]
@@ -54,7 +55,21 @@ defmodule Wardley.Maps.Svg do
         .node-circle { fill: #1a1a2e; stroke: #fff; stroke-width: 1.5; }
         .node-label { fill: #1a1a2e; font-size: 11px; }
         .edge-line { stroke: #999; stroke-width: 1; }
+        .evolve-line { stroke: #dc2626; stroke-width: 1.5; stroke-dasharray: 4 3; }
+        .evolve-ghost { fill: none; stroke: #dc2626; stroke-width: 1.5; }
       </style>
+      <defs>
+        <marker
+          id="evolve-arrow"
+          viewBox="0 0 10 10"
+          refX="8"
+          refY="5"
+          markerWidth="6"
+          markerHeight="6"
+          orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#dc2626" />
+        </marker>
+      </defs>
     """
   end
 
@@ -176,6 +191,54 @@ defmodule Wardley.Maps.Svg do
         _ -> ""
       end
     end)
+  end
+
+  defp render_evolutions(nodes) do
+    Enum.map(nodes, fn n ->
+      case evolve_x(n) do
+        nil ->
+          ""
+
+        target_pct ->
+          y = pct_to_y(n.y_pct)
+          x1 = pct_to_x(n.x_pct)
+          x2 = pct_to_x(target_pct)
+          # Stop the line short of the ghost marker so they don't overlap.
+          dir = if x2 >= x1, do: 1, else: -1
+          x_line_end = x2 - dir * (@node_radius + 3)
+
+          """
+          <line
+            class="evolve-line"
+            x1="#{x1}"
+            y1="#{y}"
+            x2="#{x_line_end}"
+            y2="#{y}"
+            marker-end="url(#evolve-arrow)" />
+          <circle
+            class="evolve-ghost"
+            cx="#{x2}"
+            cy="#{y}"
+            r="#{@node_radius}" />
+          """
+      end
+    end)
+  end
+
+  # Target evolution as a percentage (0–100), or nil if the node isn't evolving.
+  defp evolve_x(node) do
+    case node.metadata do
+      %{"evolve_x" => v} when is_number(v) -> v
+      %{"evolve_x" => v} when is_binary(v) -> parse_number(v)
+      _ -> nil
+    end
+  end
+
+  defp parse_number(str) do
+    case Float.parse(str) do
+      {f, _} -> f
+      :error -> nil
+    end
   end
 
   defp pct_to_x(pct) do
