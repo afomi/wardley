@@ -3,6 +3,10 @@ defmodule WardleyWeb.Router do
 
   import WardleyWeb.UserAuth
 
+  pipeline :admin_only do
+    plug :require_admin
+  end
+
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
@@ -95,6 +99,14 @@ defmodule WardleyWeb.Router do
     post "/personas", PersonasController, :create
     patch "/personas/:id", PersonasController, :update
     delete "/personas/:id", PersonasController, :delete
+  end
+
+  scope "/admin", WardleyWeb.Admin, as: :admin do
+    pipe_through [:browser, :require_authenticated_user, :admin_only]
+
+    get "/", AdminController, :index
+    get "/users", AdminController, :users
+    get "/users/:id", AdminController, :show_user
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development

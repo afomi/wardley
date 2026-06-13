@@ -19,6 +19,31 @@ defmodule Wardley.Accounts.UserNotifier do
   end
 
   @doc """
+  Notify the admin that a new user has signed up.
+  """
+  def deliver_new_user_notification(user) do
+    admin_email = Application.get_env(:wardley, :admin_email)
+
+    if admin_email do
+      deliver(admin_email, "New user signed up — #{user.email}", """
+
+      ==============================
+
+      A new user has signed up on Wardley.app:
+
+      Email: #{user.email}
+      ID:    #{user.id}
+
+      View user: https://wardley.app/admin/users/#{user.id}
+
+      ==============================
+      """)
+    else
+      {:ok, nil}
+    end
+  end
+
+  @doc """
   Deliver instructions to update a user email.
   """
   def deliver_update_email_instructions(user, url) do

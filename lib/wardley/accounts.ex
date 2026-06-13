@@ -60,6 +60,10 @@ defmodule Wardley.Accounts do
   """
   def get_user!(id), do: Repo.get!(User, id)
 
+  def list_users do
+    Repo.all(from u in User, order_by: [desc: u.inserted_at])
+  end
+
   @system_email "system@wardley.app"
 
   def get_system_user do
@@ -83,9 +87,17 @@ defmodule Wardley.Accounts do
 
   """
   def register_user(attrs) do
-    %User{}
-    |> User.email_changeset(attrs)
-    |> Repo.insert()
+    result =
+      %User{}
+      |> User.email_changeset(attrs)
+      |> Repo.insert()
+
+    case result do
+      {:ok, user} -> UserNotifier.deliver_new_user_notification(user)
+      _ -> :ok
+    end
+
+    result
   end
 
   ## OAuth
@@ -136,9 +148,17 @@ defmodule Wardley.Accounts do
   def find_or_create_from_oauth(_provider, _info), do: {:error, :email_required}
 
   defp create_oauth_user(email) do
-    %User{}
-    |> User.oauth_registration_changeset(%{email: email})
-    |> Repo.insert()
+    result =
+      %User{}
+      |> User.oauth_registration_changeset(%{email: email})
+      |> Repo.insert()
+
+    case result do
+      {:ok, user} -> UserNotifier.deliver_new_user_notification(user)
+      _ -> :ok
+    end
+
+    result
   end
 
   defp create_identity(user, provider, uid, info) do

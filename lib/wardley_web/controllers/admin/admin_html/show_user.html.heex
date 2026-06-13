@@ -1,0 +1,125 @@
+<Layouts.app
+  flash={@flash}
+  current_scope={@current_scope}
+>
+  <section class="max-w-4xl mx-auto px-4 py-8">
+    <header class="mb-8">
+      <.link
+        href={~p"/admin/users"}
+        class="text-xs font-mono tracking-wide uppercase text-slate-400 hover:text-slate-600 transition"
+      >
+        ← Admin / Users
+      </.link>
+      <h1 class="mt-3 text-2xl font-semibold text-slate-900 dark:text-white">
+        {@user.email}
+      </h1>
+      <div class="mt-2 flex items-center gap-3">
+        <%= if @user.is_admin do %>
+          <span class="inline-flex items-center rounded-full bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-400">
+            Admin
+          </span>
+        <% end %>
+        <%= if @user.confirmed_at do %>
+          <span class="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900/30 px-2 py-0.5 text-xs font-medium text-green-700 dark:text-green-400">
+            Confirmed
+          </span>
+        <% else %>
+          <span class="inline-flex items-center rounded-full bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-400">
+            Unconfirmed
+          </span>
+        <% end %>
+      </div>
+    </header>
+
+    <div class="grid gap-6 sm:grid-cols-2 mb-8">
+      <div class="rounded-lg border border-slate-200 dark:border-slate-700 p-5">
+        <p class="text-xs font-mono uppercase tracking-wide text-slate-400 mb-3">
+          Account
+        </p>
+        <dl class="space-y-2 text-sm">
+          <div class="flex justify-between">
+            <dt class="text-slate-500">ID</dt>
+            <dd class="font-mono text-slate-700 dark:text-slate-300">{@user.id}</dd>
+          </div>
+          <div class="flex justify-between">
+            <dt class="text-slate-500">Joined</dt>
+            <dd class="text-slate-700 dark:text-slate-300">
+              {Calendar.strftime(@user.inserted_at, "%b %d, %Y")}
+            </dd>
+          </div>
+          <div class="flex justify-between">
+            <dt class="text-slate-500">Confirmed</dt>
+            <dd class="text-slate-700 dark:text-slate-300">
+              <%= if @user.confirmed_at do %>
+                {Calendar.strftime(@user.confirmed_at, "%b %d, %Y")}
+              <% else %>
+                <span class="text-amber-500">No</span>
+              <% end %>
+            </dd>
+          </div>
+          <div class="flex justify-between">
+            <dt class="text-slate-500">Admin</dt>
+            <dd class="text-slate-700 dark:text-slate-300">
+              {if @user.is_admin, do: "Yes", else: "No"}
+            </dd>
+          </div>
+        </dl>
+      </div>
+
+      <div class="rounded-lg border border-slate-200 dark:border-slate-700 p-5">
+        <p class="text-xs font-mono uppercase tracking-wide text-slate-400 mb-3">
+          Maps
+        </p>
+        <p class="text-3xl font-semibold text-slate-900 dark:text-white">
+          {length(@maps)}
+        </p>
+        <p class="text-sm text-slate-500 mt-1">
+          maps created
+        </p>
+      </div>
+    </div>
+
+    <%= if length(@maps) > 0 do %>
+      <div>
+        <h2 class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
+          Maps
+        </h2>
+        <div class="rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+          <table class="w-full text-sm">
+            <thead class="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+              <tr>
+                <th class="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-400">
+                  Name
+                </th>
+                <th class="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-400">
+                  Visibility
+                </th>
+                <th class="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-400">
+                  Updated
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <%= for map <- @maps do %>
+                <tr
+                  class="border-b border-slate-100 dark:border-slate-700/50 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition cursor-pointer"
+                  onclick={"window.location='/maps/#{map.id}'"}
+                >
+                  <td class="px-4 py-3 font-medium text-slate-900 dark:text-white">
+                    {map.name}
+                  </td>
+                  <td class="px-4 py-3 text-slate-500 dark:text-slate-400">
+                    {map.visibility}
+                  </td>
+                  <td class="px-4 py-3 text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                    {Calendar.strftime(map.updated_at, "%b %d, %Y")}
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    <% end %>
+  </section>
+</Layouts.app>

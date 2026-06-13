@@ -7,6 +7,8 @@
 # General application configuration
 import Config
 
+config :wardley, :admin_email, System.get_env("ADMIN_EMAIL", "wold@afomi.com")
+
 config :wardley, :scopes,
   user: [
     default: true,
